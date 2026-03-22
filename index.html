@@ -1,25 +1,58 @@
-
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌲 もりのめいろ 🌲</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #e8f5d0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 24px 12px;
+    font-family: 'Segoe UI', 'Hiragino Maru Gothic Pro', 'BIZ UDPGothic', sans-serif;
+  }
   #game-wrap {
-    font-family: 'Segoe UI', sans-serif;
     background: linear-gradient(180deg, #b8e890 0%, #90cc60 40%, #70aa40 100%);
-    border-radius: 20px;
-    padding: 14px;
-    min-height: 560px;
+    border-radius: 24px;
+    padding: 18px 16px 20px;
+    width: 100%;
+    max-width: 380px;
     position: relative;
     overflow: hidden;
     border: 4px solid #4a8a20;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
   }
   #title {
     text-align: center;
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 700;
     color: #1d5a00;
     text-shadow: 2px 2px 0 #fff;
-    margin-bottom: 8px;
-    letter-spacing: 1px;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
   }
+  #level-btns {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  .lv-btn {
+    padding: 6px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    border: 2px solid #4a8a20;
+    border-radius: 10px;
+    background: #fff;
+    color: #1d5a00;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .lv-btn.active { background: #1d5a00; color: #fff; }
   #canvas-wrap {
     display: flex;
     justify-content: center;
@@ -33,69 +66,105 @@
     background: #f5edd8;
     touch-action: none;
     display: block;
-  }
-  #controls { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: 2px; }
-  .btn-row { display: flex; gap: 8px; }
-  .dir-btn {
-    width: 60px; height: 60px; font-size: 26px;
-    border: none; border-radius: 14px;
-    background: #fff; border: 3px solid #4a8a20;
-    color: #1d5a00; cursor: pointer;
-    box-shadow: 0 4px 0 #4a8a20;
-    transition: transform 0.1s, box-shadow 0.1s;
-    user-select: none; -webkit-user-select: none;
-  }
-  .dir-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #4a8a20; }
-  #message {
-    font-size: 19px; font-weight: 700; color: #1d5a00;
-    text-align: center; min-height: 30px; text-shadow: 1px 1px 0 #fff;
+    max-width: 100%;
   }
   #steps-bar {
-    font-size: 15px; color: #1d5a00; text-align: center;
-    font-weight: 600; text-shadow: 1px 1px 0 #fff;
+    font-size: 15px;
+    color: #1d5a00;
+    text-align: center;
+    font-weight: 600;
+    text-shadow: 1px 1px 0 #fff;
+  }
+  #message {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1d5a00;
+    text-align: center;
+    min-height: 32px;
+    text-shadow: 1px 1px 0 #fff;
   }
   #restart-btn {
-    display: none; padding: 9px 24px; font-size: 19px; font-weight: 700;
-    border: 3px solid #4a8a20; border-radius: 14px;
-    background: #fff; color: #1d5a00; cursor: pointer;
-    box-shadow: 0 4px 0 #4a8a20; margin-top: 2px;
+    display: none;
+    padding: 10px 28px;
+    font-size: 18px;
+    font-weight: 700;
+    border: 3px solid #4a8a20;
+    border-radius: 14px;
+    background: #fff;
+    color: #1d5a00;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #4a8a20;
   }
   #restart-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #4a8a20; }
-  #level-btns { display: flex; gap: 8px; justify-content: center; margin-bottom: 8px; }
-  .lv-btn {
-    padding: 5px 14px; font-size: 14px; font-weight: 700;
-    border: 2px solid #4a8a20; border-radius: 10px;
-    background: #fff; color: #1d5a00; cursor: pointer;
+  #controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
   }
-  .lv-btn.active { background: #1d5a00; color: #fff; }
-  .tree-deco { position: absolute; font-size: 32px; opacity: 0.35; pointer-events: none; user-select: none; }
+  .btn-row { display: flex; gap: 10px; }
+  .dir-btn {
+    width: 66px; height: 66px;
+    font-size: 28px;
+    border: 3px solid #4a8a20;
+    border-radius: 16px;
+    background: #fff;
+    color: #1d5a00;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #4a8a20;
+    transition: transform 0.1s, box-shadow 0.1s;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .dir-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #4a8a20; }
+  .tree-deco {
+    position: absolute;
+    font-size: 36px;
+    opacity: 0.35;
+    pointer-events: none;
+    user-select: none;
+  }
+  #hint {
+    font-size: 12px;
+    color: #2d6a10;
+    text-align: center;
+    margin-top: 6px;
+    opacity: 0.8;
+  }
 </style>
-
+</head>
+<body>
 <div id="game-wrap">
-  <div class="tree-deco" style="top:4px;left:6px">🌳</div>
-  <div class="tree-deco" style="top:4px;right:6px">🌲</div>
-  <div class="tree-deco" style="bottom:4px;left:6px">🌿</div>
-  <div class="tree-deco" style="bottom:4px;right:6px">🍄</div>
+  <div class="tree-deco" style="top:6px;left:8px">🌳</div>
+  <div class="tree-deco" style="top:6px;right:8px">🌲</div>
+  <div class="tree-deco" style="bottom:80px;left:6px">🌿</div>
+  <div class="tree-deco" style="bottom:80px;right:6px">🍄</div>
 
   <div id="title">🌲 もりのめいろ 🌲</div>
+
   <div id="level-btns">
     <button class="lv-btn" onclick="setLevel(1)">かんたん</button>
     <button class="lv-btn" onclick="setLevel(2)">ふつう</button>
     <button class="lv-btn active" onclick="setLevel(3)">むずかしい</button>
   </div>
+
   <div id="canvas-wrap">
     <canvas id="maze"></canvas>
     <div id="steps-bar">あるいたマス：0</div>
     <div id="message">やじるしで うごかしてね！</div>
     <button id="restart-btn" onclick="initGame()">もういちど！</button>
     <div id="controls">
-      <div class="btn-row"><button class="dir-btn" onclick="move(0,-1)">⬆️</button></div>
+      <div class="btn-row">
+        <button class="dir-btn" onclick="move(0,-1)">⬆️</button>
+      </div>
       <div class="btn-row">
         <button class="dir-btn" onclick="move(-1,0)">⬅️</button>
         <button class="dir-btn" onclick="move(0,1)">⬇️</button>
         <button class="dir-btn" onclick="move(1,0)">➡️</button>
       </div>
     </div>
+    <div id="hint">📱 スワイプでも動かせます</div>
   </div>
 </div>
 
@@ -109,20 +178,20 @@ const ctx = canvas.getContext('2d');
 
 function setLevel(lv) {
   currentLevel = lv;
-  document.querySelectorAll('.lv-btn').forEach((b,i) => b.classList.toggle('active', i+1===lv));
+  document.querySelectorAll('.lv-btn').forEach((b, i) => b.classList.toggle('active', i + 1 === lv));
   initGame();
 }
 
 function initGame() {
   const cfg = LEVELS[currentLevel];
   COLS = cfg.cols; ROWS = cfg.rows;
-  CELL = Math.floor(300 / Math.max(COLS, ROWS));
+  const maxSize = Math.min(340, window.innerWidth - 64);
+  CELL = Math.floor(maxSize / Math.max(COLS, ROWS));
   const W = CELL * COLS, H = CELL * ROWS;
   canvas.width = W; canvas.height = H;
   playerX = 0; playerY = 0;
   goalX = COLS - 1; goalY = ROWS - 1;
-  won = false; steps = 0;
-  trail = [];
+  won = false; steps = 0; trail = [];
   document.getElementById('message').textContent = 'やじるしで うごかしてね！';
   document.getElementById('restart-btn').style.display = 'none';
   document.getElementById('steps-bar').textContent = 'あるいたマス：0';
@@ -140,14 +209,14 @@ function generateMaze(cols, rows) {
   for (let y = 0; y < rows; y++) visited[y] = new Array(cols).fill(false);
   function carve(x, y) {
     visited[y][x] = true;
-    let dirs = [[1,0],[-1,0],[0,1],[0,-1]].sort(() => Math.random()-0.5);
+    let dirs = [[1,0],[-1,0],[0,1],[0,-1]].sort(() => Math.random() - 0.5);
     for (let [dx, dy] of dirs) {
-      let nx = x+dx, ny = y+dy;
-      if (nx>=0 && nx<cols && ny>=0 && ny<rows && !visited[ny][nx]) {
-        if (dx===1) walls[y][x].right = false;
-        else if (dx===-1) walls[y][nx].right = false;
-        else if (dy===1) walls[y][x].down = false;
-        else if (dy===-1) walls[ny][x].down = false;
+      let nx = x + dx, ny = y + dy;
+      if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && !visited[ny][nx]) {
+        if (dx === 1) walls[y][x].right = false;
+        else if (dx === -1) walls[y][nx].right = false;
+        else if (dy === 1) walls[y][x].down = false;
+        else if (dy === -1) walls[ny][x].down = false;
         carve(nx, ny);
       }
     }
@@ -157,10 +226,10 @@ function generateMaze(cols, rows) {
 }
 
 function canMove(x, y, dx, dy) {
-  if (dx===1) return x<COLS-1 && !maze[y][x].right;
-  if (dx===-1) return x>0 && !maze[y][x-1].right;
-  if (dy===1) return y<ROWS-1 && !maze[y][x].down;
-  if (dy===-1) return y>0 && !maze[y-1][x].down;
+  if (dx === 1)  return x < COLS-1 && !maze[y][x].right;
+  if (dx === -1) return x > 0      && !maze[y][x-1].right;
+  if (dy === 1)  return y < ROWS-1 && !maze[y][x].down;
+  if (dy === -1) return y > 0      && !maze[y-1][x].down;
   return false;
 }
 
@@ -168,12 +237,12 @@ function move(dx, dy) {
   if (won) return;
   if (!canMove(playerX, playerY, dx, dy)) { shakeCanvas(); return; }
   trail.push([playerX, playerY]);
-  if (trail.length > 80) trail.shift();
+  if (trail.length > 100) trail.shift();
   playerX += dx; playerY += dy;
   steps++;
   document.getElementById('steps-bar').textContent = 'あるいたマス：' + steps;
   draw();
-  if (playerX===goalX && playerY===goalY) {
+  if (playerX === goalX && playerY === goalY) {
     won = true;
     document.getElementById('message').textContent = '🎉 やったね！ゴール！ 🎉';
     document.getElementById('restart-btn').style.display = 'inline-block';
@@ -184,8 +253,8 @@ function move(dx, dy) {
 function shakeCanvas() {
   canvas.style.transition = 'transform 0.05s';
   canvas.style.transform = 'translateX(-5px)';
-  setTimeout(()=>{ canvas.style.transform='translateX(5px)'; },60);
-  setTimeout(()=>{ canvas.style.transform='translateX(0)'; },120);
+  setTimeout(() => { canvas.style.transform = 'translateX(5px)'; }, 60);
+  setTimeout(() => { canvas.style.transform = 'translateX(0)'; }, 120);
 }
 
 function draw() {
@@ -193,7 +262,6 @@ function draw() {
   ctx.fillStyle = '#f5edd8';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 通ったあとを薄く表示
   for (let i = 0; i < trail.length; i++) {
     let [tx, ty] = trail[i];
     let alpha = (i / trail.length) * 0.25;
@@ -201,18 +269,16 @@ function draw() {
     ctx.fillRect(tx*CELL+1, ty*CELL+1, CELL-2, CELL-2);
   }
 
-  // ゴール
   ctx.fillStyle = '#ffe97a';
   roundRect(ctx, goalX*CELL+2, goalY*CELL+2, CELL-4, CELL-4, 6); ctx.fill();
-  // スタート
   ctx.fillStyle = '#d4f0a0';
   roundRect(ctx, 2, 2, CELL-4, CELL-4, 6); ctx.fill();
 
-  // 壁
   ctx.strokeStyle = '#4a8a20';
   ctx.lineWidth = currentLevel === 3 ? 2.5 : 3;
   ctx.lineCap = 'round';
   ctx.strokeRect(1, 1, canvas.width-2, canvas.height-2);
+
   for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {
       let px = x*CELL, py = y*CELL;
@@ -234,7 +300,7 @@ function draw() {
 
 function drawWin() {
   ctx.fillStyle = 'rgba(255,255,100,0.35)';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   let em = Math.max(24, CELL);
   ctx.font = `${em}px serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -243,19 +309,43 @@ function drawWin() {
 
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
-  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
-  ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r);
-  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h);
-  ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r);
-  ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+  ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r); ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h); ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r); ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y); ctx.closePath();
 }
 
+// キーボード操作
 document.addEventListener('keydown', e => {
-  if(e.key==='ArrowUp'||e.key==='w') { e.preventDefault(); move(0,-1); }
-  if(e.key==='ArrowDown'||e.key==='s') { e.preventDefault(); move(0,1); }
-  if(e.key==='ArrowLeft'||e.key==='a') { e.preventDefault(); move(-1,0); }
-  if(e.key==='ArrowRight'||e.key==='d') { e.preventDefault(); move(1,0); }
+  if (e.key==='ArrowUp'   || e.key==='w') { e.preventDefault(); move(0,-1); }
+  if (e.key==='ArrowDown' || e.key==='s') { e.preventDefault(); move(0,1); }
+  if (e.key==='ArrowLeft' || e.key==='a') { e.preventDefault(); move(-1,0); }
+  if (e.key==='ArrowRight'|| e.key==='d') { e.preventDefault(); move(1,0); }
 });
+
+// スワイプ操作
+let touchStartX = 0, touchStartY = 0;
+canvas.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  const absDx = Math.abs(dx), absDy = Math.abs(dy);
+  if (Math.max(absDx, absDy) < 10) return; // 小さすぎる動きは無視
+  if (absDx > absDy) {
+    move(dx > 0 ? 1 : -1, 0);
+  } else {
+    move(0, dy > 0 ? 1 : -1);
+  }
+  e.preventDefault();
+}, { passive: false });
 
 initGame();
 </script>
+</body>
+</html>
