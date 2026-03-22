@@ -2,10 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>🌲 もりのめいろ 🌲</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
   body {
     background: #e8f5d0;
     display: flex;
@@ -14,6 +14,8 @@
     min-height: 100vh;
     padding: 24px 12px;
     font-family: 'Segoe UI', 'Hiragino Maru Gothic Pro', 'BIZ UDPGothic', sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
   }
   #game-wrap {
     background: linear-gradient(180deg, #b8e890 0%, #90cc60 40%, #70aa40 100%);
@@ -50,7 +52,7 @@
     background: #fff;
     color: #1d5a00;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    touch-action: manipulation;
   }
   .lv-btn.active { background: #1d5a00; color: #fff; }
   #canvas-wrap {
@@ -94,6 +96,7 @@
     color: #1d5a00;
     cursor: pointer;
     box-shadow: 0 4px 0 #4a8a20;
+    touch-action: manipulation;
   }
   #restart-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #4a8a20; }
   #controls {
@@ -116,6 +119,7 @@
     transition: transform 0.1s, box-shadow 0.1s;
     user-select: none;
     -webkit-user-select: none;
+    touch-action: manipulation;
   }
   .dir-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #4a8a20; }
   .tree-deco {
@@ -336,12 +340,9 @@ canvas.addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - touchStartX;
   const dy = e.changedTouches[0].clientY - touchStartY;
   const absDx = Math.abs(dx), absDy = Math.abs(dy);
-  if (Math.max(absDx, absDy) < 10) return; // 小さすぎる動きは無視
-  if (absDx > absDy) {
-    move(dx > 0 ? 1 : -1, 0);
-  } else {
-    move(0, dy > 0 ? 1 : -1);
-  }
+  if (Math.max(absDx, absDy) < 10) return;
+  if (absDx > absDy) move(dx > 0 ? 1 : -1, 0);
+  else move(0, dy > 0 ? 1 : -1);
   e.preventDefault();
 }, { passive: false });
 
