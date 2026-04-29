@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🗺️ めいろのせかい</title>
+<title>🎮 あそびのせかい</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
 
@@ -123,6 +123,28 @@
   .card:nth-child(1) { animation-delay: 0.1s; }
   .card:nth-child(2) { animation-delay: 0.2s; }
   .card:nth-child(3) { animation-delay: 0.3s; }
+  .card:nth-child(4) { animation-delay: 0.4s; }
+  .card:nth-child(5) { animation-delay: 0.5s; }
+  .card:nth-child(6) { animation-delay: 0.6s; }
+  .card-mori  { animation-delay: 0.1s; }
+  .card-umi   { animation-delay: 0.2s; }
+  .card-machi { animation-delay: 0.3s; }
+  .card-rocket { animation-delay: 0.4s; }
+  .card-neko  { animation-delay: 0.5s; }
+  .card-nakama { animation-delay: 0.6s; }
+
+  /* セクション見出し */
+  .section-label {
+    width: 100%;
+    max-width: 420px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #6a8faf;
+    letter-spacing: 0.1em;
+    margin-top: 24px;
+    margin-bottom: -4px;
+    padding-left: 4px;
+  }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(30px); }
@@ -145,6 +167,7 @@
     gap: 18px;
     position: relative;
     overflow: hidden;
+    min-height: 110px;
   }
 
   /* 森カード */
@@ -161,6 +184,31 @@
   }
   .card-machi {
     box-shadow: 0 6px 0 #8b3e00, 0 12px 30px rgba(0,0,0,0.1);
+  }
+
+  /* かずロケットカード */
+  .card-rocket .card-inner {
+    background: linear-gradient(135deg, #1a1a6e 0%, #0d47a1 50%, #1976d2 100%);
+    box-shadow: inset 0 -6px 0 #0d0d4a;
+  }
+  .card-rocket {
+    box-shadow: 0 6px 0 #0d0d4a, 0 12px 30px rgba(0,0,0,0.1);
+  }
+
+  /* ねこ算数カード */
+  .card-neko .card-inner {
+    background: linear-gradient(135deg, #c87941 0%, #ff8c42 50%, #ffb347 100%);
+  }
+  .card-neko {
+    box-shadow: 0 6px 0 #8a5520, 0 12px 30px rgba(0,0,0,0.1);
+  }
+
+  /* なかまわけカード */
+  .card-nakama .card-inner {
+    background: linear-gradient(135deg, #7b1fa2 0%, #ab47bc 50%, #ce93d8 100%);
+  }
+  .card-nakama {
+    box-shadow: 0 6px 0 #4a0072, 0 12px 30px rgba(0,0,0,0.1);
   }
 
   /* 海カード */
@@ -204,6 +252,14 @@
   }
   .card:nth-child(2) .card-icon { animation-delay: -1s; }
   .card:nth-child(3) .card-icon { animation-delay: -2s; }
+  .card:nth-child(4) .card-icon { animation-delay: -0.5s; }
+  .card:nth-child(5) .card-icon { animation-delay: -1.5s; }
+  .card:nth-child(6) .card-icon { animation-delay: -2.5s; }
+  .card-umi    .card-icon { animation-delay: -1s; }
+  .card-machi  .card-icon { animation-delay: -2s; }
+  .card-rocket .card-icon { animation-delay: -0.5s; }
+  .card-neko   .card-icon { animation-delay: -1.5s; }
+  .card-nakama .card-icon { animation-delay: -2.5s; }
   @keyframes iconFloat {
     0%, 100% { transform: translateY(0) rotate(-3deg); }
     50% { transform: translateY(-5px) rotate(3deg); }
@@ -301,12 +357,14 @@
 
 <div class="content">
   <div class="title-area">
-    <span class="title-emoji">🗺️</span>
-    <h1>めいろのせかい</h1>
-    <p class="subtitle">すきなめいろをえらんでね！</p>
+    <span class="title-emoji">🌏</span>
+    <h1>あそびのせかい</h1>
+    <p class="subtitle">すきなゲームをえらんでね！</p>
   </div>
 
   <div class="cards">
+
+    <div class="section-label">🗺️ めいろ</div>
 
     <!-- 森の迷路 -->
     <a class="card card-mori" href="forest-maze.html">
@@ -359,9 +417,59 @@
       </div>
     </a>
 
+    <div class="section-label">🎮 ゲーム</div>
+
+    <!-- かずロケット -->
+    <a class="card card-rocket" href="kazu-rocket.html">
+      <div class="card-inner">
+        <div class="card-icon">🚀</div>
+        <div class="card-text">
+          <div class="card-title">かずロケット</div>
+          <div class="card-desc">かずをかぞえてロケットをとばそう！</div>
+          <div class="card-levels">
+            <span class="level-tag">6コース</span>
+            <span class="level-tag">ロケットあんろっく</span>
+          </div>
+        </div>
+        <div class="card-arrow">▶</div>
+      </div>
+    </a>
+
+    <!-- ねこ算数ランド -->
+    <a class="card card-neko" href="neko-math.html">
+      <div class="card-inner">
+        <div class="card-icon">🐱</div>
+        <div class="card-text">
+          <div class="card-title">ねこ算数ランド</div>
+          <div class="card-desc">ねこといっしょにかけ算・わり算！</div>
+          <div class="card-levels">
+            <span class="level-tag">かけ算</span>
+            <span class="level-tag">わり算</span>
+          </div>
+        </div>
+        <div class="card-arrow">▶</div>
+      </div>
+    </a>
+
+    <!-- なかまわけ -->
+    <a class="card card-nakama" href="nakamawake.html">
+      <div class="card-inner">
+        <div class="card-icon">🔍</div>
+        <div class="card-text">
+          <div class="card-title">なかまはずれは どれ？</div>
+          <div class="card-desc">なかまはずれをみつけよう！</div>
+          <div class="card-levels">
+            <span class="level-tag">3〜4さい</span>
+            <span class="level-tag">8カテゴリ</span>
+          </div>
+        </div>
+        <div class="card-arrow">▶</div>
+      </div>
+    </a>
+
   </div>
 
-  <p class="footer">✨ もっとめいろがふえるよ！</p>
+  <p class="footer">✨ もっとゲームがふえるよ！</p>
 </div>
 
 <script>
