@@ -1,1 +1,923 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏙️ 街の迷路 🏙️</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
 
+  :root {
+    --sky: #fff8e7;
+    --sky2: #fef0c0;
+    --orange: #f97316;
+    --orange2: #fb923c;
+    --yellow: #fbbf24;
+    --yellow2: #fde68a;
+    --brown: #78350f;
+    --dark: #431407;
+    --road: #d6c89a;
+    --road2: #e8ddb5;
+    --building1: #f59e0b;
+    --building2: #fcd34d;
+    --building3: #fb7185;
+    --building4: #60a5fa;
+    --green: #4ade80;
+    --trail: rgba(251,191,36,0.45);
+    --trail-border: rgba(245,158,11,0.7);
+    --wall: #c2a251;
+    --wall-top: #e8c86a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: linear-gradient(180deg, #ffe082 0%, #fff8e1 40%, #fffde7 100%);
+    font-family: 'M PLUS Rounded 1c', 'Kosugi Maru', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    position: relative;
+    padding-bottom: 30px;
+  }
+
+  /* 空の雲 */
+  .cloud {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 80px;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .cloud-shape {
+    position: absolute;
+    background: rgba(255,255,255,0.7);
+    border-radius: 50px;
+    animation: floatCloud linear infinite;
+  }
+  @keyframes floatCloud {
+    from { transform: translateX(-200px); }
+    to { transform: translateX(110vw); }
+  }
+
+  /* 建物の背景装飾 */
+  .buildings-bg {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    pointer-events: none;
+    z-index: 0;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    padding: 0 10px;
+    opacity: 0.25;
+  }
+  .bld {
+    border-radius: 4px 4px 0 0;
+    flex-shrink: 0;
+  }
+
+  h1 {
+    position: relative;
+    z-index: 1;
+    margin-top: 24px;
+    font-size: clamp(24px, 6vw, 36px);
+    font-weight: 800;
+    color: var(--dark);
+    text-shadow: 2px 3px 0 var(--yellow), 3px 5px 0 rgba(0,0,0,0.1);
+    letter-spacing: 0.06em;
+  }
+
+  .subtitle {
+    position: relative;
+    z-index: 1;
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--brown);
+    letter-spacing: 0.05em;
+  }
+
+  /* レベル選択 */
+  .level-select {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 12px 0;
+    justify-content: center;
+  }
+
+  .level-btn {
+    padding: 10px 18px;
+    border-radius: 50px;
+    border: 2px solid var(--brown);
+    background: white;
+    color: var(--brown);
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 3px 0 var(--brown);
+  }
+  .level-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 var(--brown);
+    background: var(--yellow2);
+  }
+  .level-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 0 var(--brown);
+  }
+  .level-btn.active {
+    background: var(--orange);
+    color: white;
+    border-color: var(--dark);
+    box-shadow: 0 3px 0 var(--dark);
+  }
+
+  /* 情報バー */
+  .info-bar {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 10px;
+    margin: 12px 12px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .info-item {
+    background: white;
+    border: 2px solid var(--brown);
+    border-radius: 50px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brown);
+    box-shadow: 0 2px 0 var(--brown);
+  }
+
+  .info-item .val {
+    color: var(--orange);
+    font-size: 16px;
+  }
+
+  /* コントロールバー */
+  .ctrl-bar {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 8px;
+    margin: 10px 12px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .ctrl-btn {
+    padding: 8px 16px;
+    border-radius: 50px;
+    border: 2px solid var(--brown);
+    background: white;
+    color: var(--brown);
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 2px 0 var(--brown);
+  }
+  .ctrl-btn:hover {
+    background: var(--yellow2);
+    transform: translateY(-1px);
+  }
+  .ctrl-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 var(--brown);
+  }
+  .music-btn.on {
+    background: var(--yellow);
+    border-color: var(--dark);
+    color: var(--dark);
+  }
+
+  /* 迷路コンテナ */
+  .maze-container {
+    position: relative;
+    z-index: 1;
+    margin: 12px auto 0;
+    padding: 6px;
+    background: white;
+    border: 3px solid var(--brown);
+    border-radius: 16px;
+    box-shadow: 0 6px 0 var(--brown), 0 10px 20px rgba(0,0,0,0.1);
+    max-width: calc(100vw - 24px);
+  }
+
+  #maze {
+    display: block;
+    border-radius: 10px;
+  }
+
+  /* 矢印パッド */
+  .arrow-pad {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 54px);
+    gap: 5px;
+    margin: 14px auto 0;
+  }
+
+  .arrow-btn {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    border: 2px solid var(--brown);
+    background: white;
+    color: var(--brown);
+    font-size: 22px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 0 var(--brown);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  .arrow-btn:hover { background: var(--yellow2); }
+  .arrow-btn.pressed, .arrow-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 var(--brown);
+    background: var(--yellow);
+  }
+  .arrow-btn.empty {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  /* クリア画面 */
+  .clear-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(255,240,180,0.92);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .clear-overlay.show { display: flex; }
+
+  .clear-box {
+    background: white;
+    border: 4px solid var(--brown);
+    border-radius: 24px;
+    padding: 36px 40px;
+    text-align: center;
+    box-shadow: 0 8px 0 var(--brown), 0 16px 40px rgba(0,0,0,0.15);
+  }
+
+  .clear-title {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--orange);
+    text-shadow: 2px 3px 0 var(--yellow);
+    letter-spacing: 0.08em;
+  }
+
+  .clear-sub {
+    margin-top: 8px;
+    font-size: 1rem;
+    color: var(--brown);
+    font-weight: 700;
+  }
+
+  .clear-steps {
+    margin-top: 12px;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--dark);
+  }
+
+  .clear-btn {
+    margin-top: 18px;
+    padding: 14px 36px;
+    border: 3px solid var(--brown);
+    border-radius: 50px;
+    background: var(--orange);
+    color: white;
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.08em;
+    box-shadow: 0 4px 0 var(--brown);
+  }
+  .clear-btn:hover {
+    background: var(--yellow);
+    color: var(--dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 var(--brown);
+  }
+
+  .person-emoji {
+    font-size: 3rem;
+    animation: walk 0.5s steps(2) infinite;
+    display: inline-block;
+  }
+  @keyframes walk {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(-1); }
+  }
+
+  /* 街のアニメーション */
+  @keyframes carMove {
+    from { transform: translateX(-60px); }
+    to { transform: translateX(110vw); }
+  }
+  .car {
+    position: fixed;
+    bottom: 14px;
+    font-size: 22px;
+    animation: carMove linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- 雲 -->
+<div class="cloud" id="cloudLayer"></div>
+
+<!-- 背景建物 -->
+<div class="buildings-bg" id="buildingsBg"></div>
+
+<!-- クリア画面 -->
+<div class="clear-overlay" id="clearOverlay">
+  <div class="clear-box">
+    <div class="person-emoji">🚶</div>
+    <div class="clear-title">🎉 ゴール！</div>
+    <div class="clear-sub">無事に街を歩き抜けたよ！</div>
+    <div class="clear-steps" id="clearSteps"></div>
+    <button class="clear-btn" onclick="document.getElementById('clearOverlay').classList.remove('show'); newMaze();">もう一度あそぶ</button>
+  </div>
+</div>
+
+<h1>🏙️ 街の迷路 🏙️</h1>
+<p class="subtitle">街をさんぽして ゴールを目指そう！</p>
+
+<div class="level-select">
+  <button class="level-btn" data-size="19" onclick="setLevel(this,19)">🚶 かんたん（19×19）</button>
+  <button class="level-btn" data-size="23" onclick="setLevel(this,23)">🚗 ふつう（23×23）</button>
+  <button class="level-btn active" data-size="27" onclick="setLevel(this,27)">🏙️ むずかしい（27×27）</button>
+</div>
+
+<div class="info-bar">
+  <div class="info-item">🚶 歩いたマス：<span class="val" id="stepCount">0</span></div>
+  <div class="info-item">🏁 ゴールまで：<span class="val" id="remainInfo">-</span></div>
+</div>
+
+<div class="ctrl-bar">
+  <button class="ctrl-btn" onclick="newMaze()">🔄 新しい迷路</button>
+  <button class="ctrl-btn" onclick="toggleHint()">💡 ヒント</button>
+  <button class="ctrl-btn music-btn" id="musicBtn" onclick="toggleMusic()">🎵 BGM ON</button>
+</div>
+
+<div class="maze-container">
+  <canvas id="maze"></canvas>
+</div>
+
+<div class="arrow-pad">
+  <div class="arrow-btn empty"></div>
+  <button class="arrow-btn" id="btnUp"    >▲</button>
+  <div class="arrow-btn empty"></div>
+  <button class="arrow-btn" id="btnLeft"  >◀</button>
+  <div class="arrow-btn empty"></div>
+  <button class="arrow-btn" id="btnRight" >▶</button>
+  <div class="arrow-btn empty"></div>
+  <button class="arrow-btn" id="btnDown"  >▼</button>
+  <div class="arrow-btn empty"></div>
+</div>
+
+<script>
+// ======== 設定 ========
+let GRID = 27; // デフォルト むずかしい
+let CELL = 18; // セルサイズ(px) ← 動的に計算
+let showHint = false;
+
+function calcCell() {
+  // 画面幅からパディング・ボーダー分を引いて、グリッド数で割る
+  const maxW = Math.min(window.innerWidth - 28, 520); // 左右余白 14px×2 + border 6px
+  CELL = Math.floor(maxW / GRID);
+  if (CELL < 10) CELL = 10;
+  if (CELL > 22) CELL = 22;
+}
+let musicOn = false;
+let audioCtx = null;
+let musicNodes = [];
+let maze = [], visited = [], solution = [];
+let px = 1, py = 1;
+let steps = 0;
+
+// ======== キャンバス ========
+const canvas = document.getElementById('maze');
+const ctx = canvas.getContext('2d');
+
+// ======== 迷路生成（再帰バックトラック） ========
+function generateMaze(size) {
+  const g = size;
+  const grid = Array.from({length: g}, () => Array(g).fill(1)); // 1=壁
+
+  function carve(x, y) {
+    grid[y][x] = 0;
+    const dirs = [[0,-2],[0,2],[-2,0],[2,0]].sort(() => Math.random()-0.5);
+    for (const [dx, dy] of dirs) {
+      const nx = x+dx, ny = y+dy;
+      if (nx>0 && ny>0 && nx<g-1 && ny<g-1 && grid[ny][nx]===1) {
+        grid[y+dy/2][x+dx/2] = 0;
+        carve(nx, ny);
+      }
+    }
+  }
+  carve(1, 1);
+  grid[0][1] = 0; // スタート穴
+  grid[g-1][g-2] = 0; // ゴール穴
+  return grid;
+}
+
+// ======== 最短経路（BFS） ========
+function bfs(grid, startX, startY, endX, endY) {
+  const g = grid.length;
+  const dist = Array.from({length: g}, () => Array(g).fill(-1));
+  const prev = Array.from({length: g}, () => Array(g).fill(null));
+  dist[startY][startX] = 0;
+  const queue = [[startX, startY]];
+  while (queue.length) {
+    const [x, y] = queue.shift();
+    if (x===endX && y===endY) break;
+    for (const [dx, dy] of [[0,1],[0,-1],[1,0],[-1,0]]) {
+      const nx=x+dx, ny=y+dy;
+      if (nx>=0&&ny>=0&&nx<g&&ny<g&&grid[ny][nx]===0&&dist[ny][nx]===-1) {
+        dist[ny][nx] = dist[y][x]+1;
+        prev[ny][nx] = [x,y];
+        queue.push([nx, ny]);
+      }
+    }
+  }
+  const path = [];
+  let cur = [endX, endY];
+  while (cur) {
+    path.unshift(cur);
+    const [cx, cy] = cur;
+    cur = prev[cy][cx];
+  }
+  return path;
+}
+
+// ======== 描画 ========
+const COLORS = {
+  floor: '#fff8e7',
+  floorAlt: '#fef3c7',
+  wall: '#c2a251',
+  wallTop: '#e8c86a',
+  trail: 'rgba(251,191,36,0.5)',
+  trailBorder: 'rgba(245,158,11,0.8)',
+  hint: 'rgba(253,120,60,0.22)',
+  start: '#4ade80',
+  goal: '#f97316',
+};
+
+function draw() {
+  const g = maze.length;
+  canvas.width = g * CELL;
+  canvas.height = g * CELL;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  for (let y=0; y<g; y++) {
+    for (let x=0; x<g; x++) {
+      const cx = x*CELL, cy = y*CELL;
+      if (maze[y][x]===1) {
+        // 壁
+        ctx.fillStyle = COLORS.wall;
+        ctx.fillRect(cx, cy, CELL, CELL);
+        // 壁の上面ハイライト
+        ctx.fillStyle = COLORS.wallTop;
+        ctx.fillRect(cx, cy, CELL, 3);
+        ctx.fillRect(cx, cy, 3, CELL);
+        // レンガ風テクスチャ
+        if ((Math.floor(y/1)+Math.floor(x/2))%2===0) {
+          ctx.fillStyle = 'rgba(0,0,0,0.05)';
+          ctx.fillRect(cx+1, cy+1, CELL-2, CELL-2);
+        }
+      } else {
+        // 道
+        ctx.fillStyle = (x+y)%2===0 ? COLORS.floor : COLORS.floorAlt;
+        ctx.fillRect(cx, cy, CELL, CELL);
+
+        // ヒント
+        if (showHint) {
+          const inSol = solution.some(([sx,sy])=>sx===x&&sy===y);
+          if (inSol) {
+            ctx.fillStyle = COLORS.hint;
+            ctx.fillRect(cx+1, cy+1, CELL-2, CELL-2);
+          }
+        }
+
+        // 通った道
+        if (visited[y] && visited[y][x]) {
+          ctx.fillStyle = COLORS.trail;
+          ctx.fillRect(cx+2, cy+2, CELL-4, CELL-4);
+          ctx.strokeStyle = COLORS.trailBorder;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(cx+2.5, cy+2.5, CELL-5, CELL-5);
+        }
+      }
+    }
+  }
+
+  // スタートマーク（🏠ふうの緑）
+  ctx.fillStyle = COLORS.start;
+  ctx.beginPath();
+  ctx.arc(1*CELL+CELL/2, 1*CELL+CELL/2, CELL/2-2, 0, Math.PI*2);
+  ctx.fill();
+
+  // ゴールマーク（オレンジの星）
+  const gx = (g-2)*CELL+CELL/2, gy = (g-2)*CELL+CELL/2;
+  drawStar(ctx, gx, gy, 5, CELL/2-1, CELL/4, COLORS.goal);
+
+  // 足跡
+  drawFootprints();
+
+  // プレイヤー（人）
+  ctx.font = `${CELL+2}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🚶', px*CELL+CELL/2, py*CELL+CELL/2);
+}
+
+function drawStar(ctx, cx, cy, spikes, outerR, innerR, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  for (let i=0; i<spikes*2; i++) {
+    const r = i%2===0 ? outerR : innerR;
+    const angle = (i*Math.PI/spikes) - Math.PI/2;
+    const x = cx + Math.cos(angle)*r;
+    const y = cy + Math.sin(angle)*r;
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawFootprints() {
+  if (!visited) return;
+  // 足跡は既にvisitedで描画済み
+}
+
+// ======== ゴールまでの距離 ========
+function updateRemain() {
+  const g = maze.length;
+  const endX = g-2, endY = g-2;
+  const path = bfs(maze, px, py, endX, endY);
+  document.getElementById('remainInfo').textContent =
+    path.length > 1 ? `約${path.length-1}マス` : 'ゴール！';
+}
+
+// ======== 移動 ========
+function move(dx, dy) {
+  const nx = px+dx, ny = py+dy;
+  const g = maze.length;
+  if (nx<0||ny<0||nx>=g||ny>=g) return;
+  if (maze[ny][nx]===1) return;
+  px = nx; py = ny;
+  if (!visited[py]) visited[py] = {};
+  visited[py][px] = true;
+  steps++;
+  document.getElementById('stepCount').textContent = steps;
+  updateRemain();
+  draw();
+
+  // ゴール判定
+  if (px===g-2 && py===g-2) {
+    setTimeout(() => {
+      document.getElementById('clearSteps').textContent = `歩いたマス: ${steps}マス`;
+      document.getElementById('clearOverlay').classList.add('show');
+      if (musicOn) playClearSound();
+    }, 200);
+  }
+}
+
+// ======== キーボード ========
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowUp'||e.key==='w'||e.key==='k') { e.preventDefault(); move(0,-1); }
+  if (e.key==='ArrowDown'||e.key==='s'||e.key==='j') { e.preventDefault(); move(0,1); }
+  if (e.key==='ArrowLeft'||e.key==='a'||e.key==='h') { e.preventDefault(); move(-1,0); }
+  if (e.key==='ArrowRight'||e.key==='d'||e.key==='l') { e.preventDefault(); move(1,0); }
+});
+
+// ======== タッチスワイプ ========
+let touchStartX=0, touchStartY=0;
+canvas.addEventListener('touchstart', e=>{
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, {passive:true});
+canvas.addEventListener('touchend', e=>{
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dx)>Math.abs(dy)) move(dx>0?1:-1, 0);
+  else move(0, dy>0?1:-1);
+}, {passive:true});
+
+// ======== 矢印ボタン ========
+['btnUp','btnDown','btnLeft','btnRight'].forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener('click', ()=>{
+    if (id==='btnUp') move(0,-1);
+    if (id==='btnDown') move(0,1);
+    if (id==='btnLeft') move(-1,0);
+    if (id==='btnRight') move(1,0);
+  });
+  el.addEventListener('touchstart', e=>{
+    e.preventDefault();
+    el.classList.add('pressed');
+    if (id==='btnUp') move(0,-1);
+    if (id==='btnDown') move(0,1);
+    if (id==='btnLeft') move(-1,0);
+    if (id==='btnRight') move(1,0);
+    setTimeout(()=>el.classList.remove('pressed'),150);
+  }, {passive:false});
+});
+
+// ======== レベル設定 ========
+function setLevel(btn, size) {
+  document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  GRID = size;
+  calcCell();
+  newMaze();
+}
+
+// ======== 新しい迷路 ========
+function newMaze() {
+  document.getElementById('clearOverlay').classList.remove('show');
+  calcCell();
+  maze = generateMaze(GRID);
+  visited = Array.from({length:GRID}, ()=>({}));
+  px = 1; py = 1;
+  steps = 0;
+  document.getElementById('stepCount').textContent = '0';
+  solution = bfs(maze, 1, 1, GRID-2, GRID-2);
+  visited[1][1] = true;
+  updateRemain();
+  draw();
+}
+
+// 画面回転・リサイズ対応
+window.addEventListener('resize', () => { calcCell(); draw(); });
+
+// ======== ヒント ========
+function toggleHint() {
+  showHint = !showHint;
+  draw();
+}
+
+// ======== BGM (Web Audio API) ========
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+// 街のBGM：明るいポップな雰囲気（ド・ミ・ソ・シ♭系）
+function startMusic() {
+  initAudio();
+  stopMusic();
+
+  const master = audioCtx.createGain();
+  master.gain.setValueAtTime(0.18, audioCtx.currentTime);
+  master.connect(audioCtx.destination);
+  musicNodes.push(master);
+
+  // 音階：明るいCメジャー系
+  const melody = [
+    [523.25, 0.6], // C5
+    [659.25, 0.6], // E5
+    [783.99, 0.6], // G5
+    [659.25, 0.6], // E5
+    [587.33, 0.6], // D5
+    [523.25, 0.6], // C5
+    [659.25, 0.6], // E5
+    [783.99, 1.2], // G5 (長め)
+    [880.00, 0.6], // A5
+    [783.99, 0.6], // G5
+    [698.46, 0.6], // F5
+    [659.25, 0.6], // E5
+    [587.33, 0.6], // D5
+    [523.25, 1.2], // C5 (長め)
+  ];
+
+  const totalLen = melody.reduce((a,[,d])=>a+d,0);
+
+  function playMelody() {
+    let t = audioCtx.currentTime + 0.05;
+    for (const [freq, dur] of melody) {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.7, t+0.04);
+      g.gain.setValueAtTime(0.7, t+dur-0.08);
+      g.gain.linearRampToValueAtTime(0, t+dur);
+      osc.connect(g);
+      g.connect(master);
+      osc.start(t);
+      osc.stop(t+dur);
+      musicNodes.push(osc);
+      t += dur;
+    }
+  }
+  playMelody();
+  const melodyInterval = setInterval(playMelody, totalLen * 1000);
+  musicNodes.push({ stop: ()=>clearInterval(melodyInterval) });
+
+  // コード伴奏（ド・ソ）
+  const chords = [
+    [261.63, 392.00, 1.2], // C4, G4
+    [293.66, 440.00, 1.2], // D4, A4
+    [261.63, 392.00, 1.2], // C4, G4
+    [246.94, 369.99, 1.2], // B3, F#4
+  ];
+
+  function playChords() {
+    let t = audioCtx.currentTime + 0.05;
+    for (const [f1, f2, dur] of chords) {
+      for (const freq of [f1, f2]) {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t);
+        g.gain.setValueAtTime(0.3, t);
+        g.gain.linearRampToValueAtTime(0, t+dur);
+        osc.connect(g);
+        g.connect(master);
+        osc.start(t);
+        osc.stop(t+dur);
+        musicNodes.push(osc);
+      }
+      t += dur;
+    }
+  }
+  const chordLen = chords.reduce((a,[,,d])=>a+d,0);
+  playChords();
+  const chordInterval = setInterval(playChords, chordLen * 1000);
+  musicNodes.push({ stop: ()=>clearInterval(chordInterval) });
+
+  // ピコピコリズム音
+  function playRhythm() {
+    const now = audioCtx.currentTime;
+    const beats = [0, 0.4, 0.8, 1.2];
+    for (const b of beats) {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(b%0.8===0 ? 180 : 120, now+b);
+      g.gain.setValueAtTime(0.08, now+b);
+      g.gain.linearRampToValueAtTime(0, now+b+0.15);
+      osc.connect(g);
+      g.connect(master);
+      osc.start(now+b);
+      osc.stop(now+b+0.2);
+      musicNodes.push(osc);
+    }
+  }
+  playRhythm();
+  const rhythmInterval = setInterval(playRhythm, 1600);
+  musicNodes.push({ stop: ()=>clearInterval(rhythmInterval) });
+}
+
+function stopMusic() {
+  musicNodes.forEach(n => {
+    try { if (n.stop) n.stop(); } catch(e) {}
+  });
+  musicNodes = [];
+}
+
+function toggleMusic() {
+  musicOn = !musicOn;
+  const btn = document.getElementById('musicBtn');
+  if (musicOn) {
+    btn.textContent = '🎵 BGM OFF';
+    btn.classList.add('on');
+    startMusic();
+  } else {
+    btn.textContent = '🎵 BGM ON';
+    btn.classList.remove('on');
+    stopMusic();
+  }
+}
+
+function playClearSound() {
+  if (!audioCtx) return;
+  stopMusic();
+  const master = audioCtx.createGain();
+  master.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  master.connect(audioCtx.destination);
+  const fanfare = [523.25,659.25,783.99,1046.50];
+  let t = audioCtx.currentTime;
+  for (const f of fanfare) {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(0.5, t);
+    g.gain.linearRampToValueAtTime(0, t+0.35);
+    osc.connect(g);
+    g.connect(master);
+    osc.start(t);
+    osc.stop(t+0.4);
+    t += 0.25;
+  }
+}
+
+// ======== 雲の生成 ========
+function createClouds() {
+  const layer = document.getElementById('cloudLayer');
+  for (let i=0; i<5; i++) {
+    const c = document.createElement('div');
+    c.className = 'cloud-shape';
+    const w = 60 + Math.random()*80;
+    const h = 20 + Math.random()*20;
+    c.style.cssText = `
+      width:${w}px;height:${h}px;
+      top:${5+Math.random()*40}px;
+      left:${Math.random()*100}%;
+      animation-duration:${20+Math.random()*20}s;
+      animation-delay:${-Math.random()*20}s;
+      opacity:${0.5+Math.random()*0.4};
+    `;
+    layer.appendChild(c);
+  }
+}
+
+// ======== 建物の背景 ========
+function createBuildings() {
+  const bg = document.getElementById('buildingsBg');
+  const cols = ['#f59e0b','#fcd34d','#fb7185','#60a5fa','#a78bfa','#34d399','#f97316'];
+  for (let i=0; i<20; i++) {
+    const b = document.createElement('div');
+    b.className = 'bld';
+    const h = 40 + Math.random()*70;
+    const w = 20 + Math.random()*30;
+    b.style.cssText = `
+      width:${w}px;height:${h}px;
+      background:${cols[Math.floor(Math.random()*cols.length)]};
+    `;
+    bg.appendChild(b);
+  }
+}
+
+// ======== 車 ========
+function createCars() {
+  const cars = ['🚗','🚕','🚙','🚌','🛻'];
+  for (let i=0; i<3; i++) {
+    const c = document.createElement('div');
+    c.className = 'car';
+    c.textContent = cars[Math.floor(Math.random()*cars.length)];
+    const dur = 12 + Math.random()*20;
+    c.style.cssText = `
+      font-size:${18+Math.random()*10}px;
+      bottom:${8+Math.random()*20}px;
+      animation-duration:${dur}s;
+      animation-delay:${-Math.random()*dur}s;
+    `;
+    document.body.appendChild(c);
+  }
+}
+
+// ======== 初期化 ========
+createClouds();
+createBuildings();
+createCars();
+newMaze();
+</script>
+</body>
+</html>
