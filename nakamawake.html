@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>なかまはずれは どれ？</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap');
+
+:root {
+  --cream:   #F4EFE4;
+  --paper:   #FBF8F2;
+  --wood:    #B8845A;
+  --wood-dk: #8A5E38;
+  --ink:     #3A2A1A;
+  --ink-lt:  #7A6050;
+  --correct: #4E9E72;
+  --wrong:   #C94040;
+  --shadow:  rgba(60,30,10,.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--cream);
+  font-family:'Zen Maru Gothic',sans-serif;
+  min-height:100svh;
+  display:flex;flex-direction:column;align-items:center;
+  overflow-x:hidden;
+  padding-bottom:32px;
+}
+
+/* ヘッダー */
+header{
+  width:100%;background:var(--wood);
+  padding:14px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 3px 10px var(--shadow);
+  margin-bottom:2px;
+}
+.app-title{font-size:1.1rem;font-weight:900;color:var(--paper);letter-spacing:.05em}
+.star-row{display:flex;gap:3px;flex-wrap:wrap;max-width:160px;justify-content:flex-end}
+.star{font-size:1.1rem;transition:transform .3s}
+.star.earned{transform:scale(1.25)}
+
+/* 進捗ドット */
+.dots{display:flex;gap:7px;margin:14px 0 6px}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(184,132,90,.22);transition:background .3s}
+.dot.done  {background:var(--wood)}
+.dot.active{background:var(--wood-dk);box-shadow:0 0 0 3px rgba(184,132,90,.3)}
+
+/* 問題カード */
+.q-card{
+  width:calc(100% - 32px);max-width:440px;
+  background:var(--paper);border-radius:22px;
+  padding:16px 18px 18px;
+  box-shadow:0 4px 16px var(--shadow);
+  display:flex;flex-direction:column;align-items:center;gap:9px;
+  margin-bottom:10px;
+}
+.q-tag{display:none}
+.q-text{font-size:1.25rem;font-weight:900;color:var(--ink);text-align:center;line-height:1.55}
+
+/* ヒントボタン */
+.hint-btn{
+  background:none;border:2px solid var(--wood);
+  border-radius:20px;padding:5px 18px;
+  font-size:.78rem;font-weight:700;
+  font-family:'Zen Maru Gothic',sans-serif;
+  color:var(--wood);cursor:pointer;
+  transition:background .15s,color .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.hint-btn:active{background:var(--wood);color:var(--paper)}
+.hint-bubble{
+  font-size:.8rem;font-weight:700;color:var(--ink-lt);
+  background:rgba(184,132,90,.1);border-radius:12px;
+  padding:8px 14px;text-align:center;line-height:1.5;
+  width:100%;
+  display:none;
+  animation:fadeIn .2s ease;
+}
+.hint-bubble.show{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+/* グリッド */
+.grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  width:calc(100% - 32px);max-width:440px;
+}
+.card{
+  background:var(--paper);border-radius:18px;
+  border:2.5px solid transparent;
+  padding:16px 10px 12px;
+  display:flex;flex-direction:column;align-items:center;gap:9px;
+  cursor:pointer;
+  box-shadow:0 4px 0 rgba(0,0,0,.09),0 2px 8px var(--shadow);
+  transition:transform .1s,box-shadow .1s;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+}
+.card:active:not(.locked){transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.08)}
+.card.correct{border-color:var(--correct);background:#EEF8F2;animation:popUp .45s ease}
+.card.wrong  {border-color:var(--wrong);  background:#FDF0F0;animation:shake .38s ease}
+.card.faded  {opacity:.28;pointer-events:none}
+.card.locked {pointer-events:none}
+@keyframes popUp{0%{transform:scale(1)}35%{transform:scale(1.09)}65%{transform:scale(.97)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(4px)}}
+.card-img{width:70px;height:70px;display:flex;align-items:center;justify-content:center}
+.card-label{font-size:.82rem;font-weight:700;color:var(--ink-lt)}
+
+/* フィードバック */
+.feedback{
+  width:calc(100% - 32px);max-width:440px;
+  border-radius:14px;padding:11px 16px;
+  font-size:.92rem;font-weight:900;text-align:center;
+  opacity:0;transform:translateY(-6px);
+  transition:opacity .25s,transform .25s;pointer-events:none;
+  margin-top:4px;
+}
+.feedback.show{opacity:1;transform:translateY(0)}
+.feedback.ok{background:#EEF8F2;color:var(--correct);border:2px solid var(--correct)}
+.feedback.ng{background:#FDF0F0;color:var(--wrong);  border:2px solid var(--wrong)}
+
+/* 解説 */
+.explain{
+  width:calc(100% - 32px);max-width:440px;
+  background:rgba(184,132,90,.1);border-radius:12px;
+  padding:10px 16px;font-size:.78rem;font-weight:700;
+  color:var(--ink-lt);text-align:center;line-height:1.6;
+  opacity:0;transition:opacity .3s .15s;margin-top:2px;
+}
+.explain.show{opacity:1}
+
+/* 次へボタン */
+.next-btn{
+  background:var(--wood);color:var(--paper);
+  border:none;border-radius:50px;padding:13px 44px;
+  font-size:1rem;font-weight:900;font-family:'Zen Maru Gothic',sans-serif;
+  cursor:pointer;box-shadow:0 4px 0 var(--wood-dk);
+  transition:transform .1s,box-shadow .1s,opacity .2s;
+  opacity:0;pointer-events:none;letter-spacing:.04em;
+  margin-top:8px;
+}
+.next-btn.show{opacity:1;pointer-events:auto}
+.next-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood-dk)}
+
+/* 完了画面 */
+#completeScreen{display:none;flex-direction:column;align-items:center;gap:16px;padding:40px 20px;text-align:center}
+#completeScreen.show{display:flex}
+.big-emoji{font-size:4.5rem;animation:bob .7s ease-in-out infinite alternate}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-12px)}}
+.complete-title{font-size:1.7rem;font-weight:900;color:var(--ink)}
+.complete-sub  {font-size:1rem;color:var(--ink-lt);font-weight:700;line-height:1.7}
+.again-btn{
+  background:var(--wood);color:var(--paper);border:none;border-radius:50px;
+  padding:14px 44px;font-size:1rem;font-weight:900;
+  font-family:'Zen Maru Gothic',sans-serif;cursor:pointer;
+  box-shadow:0 4px 0 var(--wood-dk);margin-top:6px;
+}
+.again-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood-dk)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="app-title">なかまはずれは どれ？</div>
+  <div class="star-row" id="starRow"></div>
+</header>
+
+<div class="dots" id="dots"></div>
+
+<div class="q-card" id="qCard">
+  <div class="q-tag" id="qTag"></div>
+  <div class="q-text" id="qText"></div>
+  <button class="hint-btn" id="hintBtn" onclick="showHint()">💡 ヒント</button>
+  <div class="hint-bubble" id="hintBubble"></div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="feedback" id="feedback"></div>
+<div class="explain"  id="explain"></div>
+<button class="next-btn" id="nextBtn" onclick="next()">つぎへ →</button>
+
+<div id="completeScreen">
+  <div class="big-emoji">🎊</div>
+  <div class="complete-title">ぜんぶ できたよ！</div>
+  <div class="complete-sub" id="completeSub"></div>
+  <button class="again-btn" onclick="restart()">もういちど あそぶ</button>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   SVG ファクトリ
+══════════════════════════════════════ */
+const C={
+  red:'#D0483A',blue:'#3677B0',yellow:'#DBA83A',
+  green:'#4A9662',purple:'#7B5EAA',orange:'#D07030',
+};
+const SH={
+  circle:  c=>`<svg width="70" height="70" viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="${c}"/></svg>`,
+  square:  c=>`<svg width="70" height="70" viewBox="0 0 64 64"><rect x="9" y="9" width="46" height="46" rx="5" fill="${c}"/></svg>`,
+  triangle:c=>`<svg width="70" height="70" viewBox="0 0 64 64"><polygon points="32,7 59,57 5,57" fill="${c}"/></svg>`,
+  diamond: c=>`<svg width="70" height="70" viewBox="0 0 64 64"><polygon points="32,5 59,32 32,59 5,32" fill="${c}"/></svg>`,
+  star:    c=>`<svg width="70" height="70" viewBox="0 0 64 64"><polygon points="32,5 38,23 58,23 43,36 49,56 32,44 15,56 21,36 6,23 26,23" fill="${c}"/></svg>`,
+  heart:   c=>`<svg width="70" height="70" viewBox="0 0 64 64"><path d="M32 54C32 54 7 38 7 22C7 13 14 7 21 7C26 7 30 11 32 14C34 11 38 7 43 7C50 7 57 13 57 22C57 38 32 54 32 54Z" fill="${c}"/></svg>`,
+  hexagon: c=>`<svg width="70" height="70" viewBox="0 0 64 64"><polygon points="32,5 55,18.5 55,45.5 32,59 9,45.5 9,18.5" fill="${c}"/></svg>`,
+};
+
+/* ── 生き物イラスト（SVG手描き） ── */
+const IL={
+  /* 昆虫 */
+  cho:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="36" rx="4" ry="12" fill="#5A3A1A"/>
+    <ellipse cx="19" cy="25" rx="13" ry="9"  fill="#E8A030" transform="rotate(-18,19,25)"/>
+    <ellipse cx="45" cy="25" rx="13" ry="9"  fill="#E8A030" transform="rotate(18,45,25)"/>
+    <ellipse cx="17" cy="38" rx="10" ry="7"  fill="#F0C860" transform="rotate(14,17,38)"/>
+    <ellipse cx="47" cy="38" rx="10" ry="7"  fill="#F0C860" transform="rotate(-14,47,38)"/>
+    <line x1="29" y1="18" x2="23" y2="9"  stroke="#3A2A1A" stroke-width="1.5"/>
+    <line x1="35" y1="18" x2="41" y2="9"  stroke="#3A2A1A" stroke-width="1.5"/>
+    <circle cx="23" cy="9"  r="2" fill="#3A2A1A"/>
+    <circle cx="41" cy="9"  r="2" fill="#3A2A1A"/>
+  </svg>`,
+  tombo:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="34" rx="3.5" ry="14" fill="#2A7A5A"/>
+    <ellipse cx="32" cy="20" rx="6"   ry="5"  fill="#2A7A5A"/>
+    <ellipse cx="16" cy="27" rx="14"  ry="5"  fill="rgba(140,210,190,.75)"/>
+    <ellipse cx="48" cy="27" rx="14"  ry="5"  fill="rgba(140,210,190,.75)"/>
+    <ellipse cx="16" cy="35" rx="12"  ry="4"  fill="rgba(140,210,190,.6)"/>
+    <ellipse cx="48" cy="35" rx="12"  ry="4"  fill="rgba(140,210,190,.6)"/>
+    <circle cx="30" cy="18" r="2"  fill="#1A1A1A"/>
+    <circle cx="34" cy="18" r="2"  fill="#1A1A1A"/>
+  </svg>`,
+  kabuto:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="40" rx="18" ry="14" fill="#4A3010"/>
+    <ellipse cx="32" cy="26" rx="14" ry="11" fill="#3A2808"/>
+    <path d="M32 16 Q28 5 22 9"  stroke="#3A2808" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <path d="M32 16 Q36 5 42 9"  stroke="#3A2808" stroke-width="3"   fill="none" stroke-linecap="round"/>
+    <ellipse cx="21" cy="37" rx="5" ry="8" fill="#2A1A04" transform="rotate(-10,21,37)"/>
+    <ellipse cx="43" cy="37" rx="5" ry="8" fill="#2A1A04" transform="rotate(10,43,37)"/>
+    <line x1="26" y1="45" x2="14" y2="54" stroke="#2A1A04" stroke-width="2"/>
+    <line x1="32" y1="47" x2="32" y2="57" stroke="#2A1A04" stroke-width="2"/>
+    <line x1="38" y1="45" x2="50" y2="54" stroke="#2A1A04" stroke-width="2"/>
+  </svg>`,
+  hachi:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="37" rx="14" ry="12" fill="#E8C030"/>
+    <rect x="18" y="33" width="28" height="5" rx="2" fill="#3A2A0A" opacity=".5"/>
+    <rect x="18" y="40" width="28" height="5" rx="2" fill="#3A2A0A" opacity=".5"/>
+    <ellipse cx="32" cy="22" rx="9"  ry="7"  fill="#E8C030"/>
+    <ellipse cx="19" cy="26" rx="11" ry="4"  fill="rgba(200,235,255,.75)"/>
+    <ellipse cx="45" cy="26" rx="11" ry="4"  fill="rgba(200,235,255,.75)"/>
+    <line x1="30" y1="16" x2="27" y2="8" stroke="#3A2A0A" stroke-width="1.5"/>
+    <line x1="34" y1="16" x2="37" y2="8" stroke="#3A2A0A" stroke-width="1.5"/>
+    <circle cx="27" cy="8" r="2" fill="#3A2A0A"/>
+    <circle cx="37" cy="8" r="2" fill="#3A2A0A"/>
+  </svg>`,
+  ari:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="15" rx="7"  ry="6"  fill="#2A1A0A"/>
+    <ellipse cx="32" cy="30" rx="6"  ry="7"  fill="#2A1A0A"/>
+    <ellipse cx="32" cy="47" rx="9"  ry="8"  fill="#2A1A0A"/>
+    <line x1="26" y1="27" x2="13" y2="21" stroke="#2A1A0A" stroke-width="2"/>
+    <line x1="26" y1="32" x2="11" y2="32" stroke="#2A1A0A" stroke-width="2"/>
+    <line x1="26" y1="37" x2="13" y2="45" stroke="#2A1A0A" stroke-width="2"/>
+    <line x1="38" y1="27" x2="51" y2="21" stroke="#2A1A0A" stroke-width="2"/>
+    <line x1="38" y1="32" x2="53" y2="32" stroke="#2A1A0A" stroke-width="2"/>
+    <line x1="38" y1="37" x2="51" y2="45" stroke="#2A1A0A" stroke-width="2"/>
+    <circle cx="29" cy="13" r="1.5" fill="#5A3A2A"/>
+    <circle cx="35" cy="13" r="1.5" fill="#5A3A2A"/>
+    <line x1="30" y1="9"  x2="26" y2="3"  stroke="#2A1A0A" stroke-width="1.5"/>
+    <line x1="34" y1="9"  x2="38" y2="3"  stroke="#2A1A0A" stroke-width="1.5"/>
+  </svg>`,
+
+  /* 哺乳類 */
+  neko:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="40" rx="17" ry="14" fill="#E8C88A"/>
+    <ellipse cx="32" cy="26" rx="13" ry="12" fill="#E8C88A"/>
+    <polygon points="22,17 18,5 27,15"  fill="#E8C88A"/>
+    <polygon points="42,17 46,5 37,15"  fill="#E8C88A"/>
+    <circle cx="27" cy="25" r="2.8" fill="#3A2010"/>
+    <circle cx="37" cy="25" r="2.8" fill="#3A2010"/>
+    <ellipse cx="32" cy="30" rx="3" ry="2" fill="#D08080"/>
+    <path d="M32 32 Q26 34 20 32" stroke="#C07070" stroke-width="1" fill="none"/>
+    <path d="M32 32 Q38 34 44 32" stroke="#C07070" stroke-width="1" fill="none"/>
+  </svg>`,
+  inu:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="40" rx="17" ry="14" fill="#C8A060"/>
+    <ellipse cx="32" cy="25" rx="13" ry="12" fill="#C8A060"/>
+    <ellipse cx="18" cy="22" rx="7"  ry="9"  fill="#B08040" transform="rotate(-15,18,22)"/>
+    <ellipse cx="46" cy="22" rx="7"  ry="9"  fill="#B08040" transform="rotate(15,46,22)"/>
+    <circle cx="27" cy="24" r="2.8" fill="#1A0A00"/>
+    <circle cx="37" cy="24" r="2.8" fill="#1A0A00"/>
+    <ellipse cx="32" cy="30" rx="4.5" ry="3" fill="#D08060"/>
+  </svg>`,
+  usagi:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="40" rx="15" ry="13" fill="#F0E0D0"/>
+    <ellipse cx="32" cy="26" rx="11" ry="11" fill="#F0E0D0"/>
+    <rect x="22" y="5"  width="6" height="18" rx="3" fill="#F0E0D0"/>
+    <rect x="36" y="5"  width="6" height="18" rx="3" fill="#F0E0D0"/>
+    <rect x="23" y="6"  width="4" height="14" rx="2" fill="#E8B0B0"/>
+    <rect x="37" y="6"  width="4" height="14" rx="2" fill="#E8B0B0"/>
+    <circle cx="27" cy="25" r="2.5" fill="#3A2010"/>
+    <circle cx="37" cy="25" r="2.5" fill="#3A2010"/>
+    <ellipse cx="32" cy="30" rx="2.5" ry="1.8" fill="#E07090"/>
+  </svg>`,
+  kuma:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="40" rx="17" ry="14" fill="#8B6040"/>
+    <ellipse cx="32" cy="25" rx="13" ry="12" fill="#8B6040"/>
+    <circle cx="20" cy="17" r="7" fill="#8B6040"/>
+    <circle cx="44" cy="17" r="7" fill="#8B6040"/>
+    <circle cx="27" cy="25" r="2.8" fill="#1A0A00"/>
+    <circle cx="37" cy="25" r="2.8" fill="#1A0A00"/>
+    <ellipse cx="32" cy="31" rx="5.5" ry="3.5" fill="#6A4020"/>
+  </svg>`,
+  zou:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="40" rx="19" ry="15" fill="#909090"/>
+    <ellipse cx="32" cy="24" rx="14" ry="12" fill="#909090"/>
+    <ellipse cx="20" cy="20" rx="7"  ry="10" fill="#808080"/>
+    <ellipse cx="44" cy="20" rx="7"  ry="10" fill="#808080"/>
+    <path d="M26 34 Q20 42 22 52 Q24 58 28 56" stroke="#808080" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <circle cx="27" cy="22" r="2.5" fill="#1A1A1A"/>
+    <circle cx="37" cy="22" r="2.5" fill="#1A1A1A"/>
+  </svg>`,
+
+  /* 恐竜 */
+  trex:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="28" cy="38" rx="16" ry="12" fill="#5A8A3A"/>
+    <ellipse cx="44" cy="27" rx="14" ry="10" fill="#5A8A3A"/>
+    <path d="M46 19 L52 9 L56 18 L60 8 L57 22 L50 20Z" fill="#5A8A3A"/>
+    <circle cx="51" cy="21" r="2.8" fill="#1A1A1A"/>
+    <circle cx="51" cy="20" r="1"   fill="white"/>
+    <path d="M52 27 L58 29 L54 31 L60 33 L54 35" stroke="#3A6A1A" stroke-width="2" fill="none"/>
+    <line x1="24" y1="46" x2="20" y2="58" stroke="#5A8A3A" stroke-width="6" stroke-linecap="round"/>
+    <line x1="32" y1="47" x2="34" y2="59" stroke="#5A8A3A" stroke-width="6" stroke-linecap="round"/>
+    <path d="M12 40 Q6 45 8 52" stroke="#5A8A3A" stroke-width="7" fill="none" stroke-linecap="round"/>
+  </svg>`,
+  tricera:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="38" rx="20" ry="13" fill="#7A9A4A"/>
+    <ellipse cx="18" cy="30" rx="16" ry="12" fill="#7A9A4A"/>
+    <path d="M8 24 L3 12 L13 22"  fill="#7A9A4A"/>
+    <path d="M12 20 L6 5  L20 17" fill="#6A8A3A"/>
+    <path d="M22 17 L18 4 L30 15" fill="#6A8A3A"/>
+    <circle cx="13" cy="28" r="2.5" fill="#1A1A1A"/>
+    <line x1="20" y1="46" x2="14" y2="58" stroke="#7A9A4A" stroke-width="6" stroke-linecap="round"/>
+    <line x1="28" y1="48" x2="26" y2="60" stroke="#7A9A4A" stroke-width="6" stroke-linecap="round"/>
+    <line x1="36" y1="48" x2="38" y2="60" stroke="#7A9A4A" stroke-width="6" stroke-linecap="round"/>
+    <line x1="44" y1="46" x2="50" y2="58" stroke="#7A9A4A" stroke-width="6" stroke-linecap="round"/>
+    <path d="M46 36 Q54 32 56 39" stroke="#7A9A4A" stroke-width="6" fill="none" stroke-linecap="round"/>
+  </svg>`,
+  brachi:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="36" cy="44" rx="18" ry="10" fill="#6A9A5A"/>
+    <rect   x="28"  y="10"  width="8" height="36" rx="4"   fill="#6A9A5A"/>
+    <ellipse cx="32" cy="10"  rx="10" ry="7"  fill="#6A9A5A"/>
+    <circle cx="30" cy="8"  r="2"   fill="#1A1A1A"/>
+    <line x1="22" y1="50" x2="18" y2="62" stroke="#6A9A5A" stroke-width="6" stroke-linecap="round"/>
+    <line x1="30" y1="52" x2="28" y2="64" stroke="#6A9A5A" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="52" x2="42" y2="64" stroke="#6A9A5A" stroke-width="6" stroke-linecap="round"/>
+    <line x1="48" y1="50" x2="54" y2="62" stroke="#6A9A5A" stroke-width="6" stroke-linecap="round"/>
+    <path d="M48 42 Q58 38 58 44" stroke="#6A9A5A" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </svg>`,
+  ptero:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <path d="M32 32 L6 18 L14 32 L2 36 L16 36 L32 48 L48 36 L62 36 L50 32 L58 18Z" fill="#8A6AB0"/>
+    <ellipse cx="32" cy="27" rx="8" ry="7" fill="#8A6AB0"/>
+    <path d="M32 21 L38 10" stroke="#8A6AB0" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="30" cy="25" r="2" fill="#1A1A1A"/>
+    <path d="M36 32 L44 40" stroke="#6A4A90" stroke-width="2" stroke-linecap="round"/>
+  </svg>`,
+
+  /* 鳥・爬虫類・魚（卵生） */
+  tori:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="38" rx="14" ry="12" fill="#E8A830"/>
+    <ellipse cx="32" cy="24" rx="10" ry="9"  fill="#E8A830"/>
+    <path d="M32 16 Q44 8 48 18 Q40 20 32 24" fill="#E8C060"/>
+    <path d="M22 22 Q16 26 18 34 Q24 28 32 30" fill="#D09020"/>
+    <circle cx="36" cy="22" r="2.5" fill="#1A1A1A"/>
+    <path d="M40 26 L46 24 L44 28Z" fill="#E06020"/>
+    <line x1="28" y1="48" x2="24" y2="58" stroke="#E06020" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="36" y1="48" x2="40" y2="58" stroke="#E06020" stroke-width="3.5" stroke-linecap="round"/>
+  </svg>`,
+  kame:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="37" rx="20" ry="15" fill="#5A8A3A"/>
+    <path d="M16 31 Q18 20 32 18 Q46 20 48 31 Q46 45 32 47 Q18 45 16 31Z" fill="#4A7A2A"/>
+    <path d="M20 27 L26 31 M26 21 L30 27 M36 21 L38 27 M42 27 L38 31" stroke="#3A6A1A" stroke-width="1.5" fill="none"/>
+    <ellipse cx="32" cy="22" rx="8" ry="6" fill="#6A9A4A"/>
+    <circle cx="30" cy="20" r="1.5" fill="#1A1A1A"/>
+    <circle cx="34" cy="20" r="1.5" fill="#1A1A1A"/>
+    <line x1="14" y1="33" x2="6"  y2="29" stroke="#5A8A3A" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="14" y1="40" x2="6"  y2="46" stroke="#5A8A3A" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="50" y1="33" x2="58" y2="29" stroke="#5A8A3A" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="50" y1="40" x2="58" y2="46" stroke="#5A8A3A" stroke-width="4.5" stroke-linecap="round"/>
+  </svg>`,
+  sakana:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="30" cy="32" rx="20" ry="12" fill="#3A80C0"/>
+    <path d="M50 32 L62 20 L60 32 L62 44Z" fill="#3A80C0"/>
+    <circle cx="18" cy="29" r="3"   fill="#1A1A1A"/>
+    <circle cx="17" cy="28" r="1"   fill="white"/>
+    <path d="M22 28 L16 26" stroke="#2A60A0" stroke-width="1.5"/>
+    <ellipse cx="34" cy="28" rx="6" ry="4" fill="rgba(255,255,255,.22)"/>
+    <path d="M26 38 Q30 42 34 38" stroke="#2A60A0" stroke-width="1.5" fill="none"/>
+  </svg>`,
+  hebi:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <path d="M32 58 Q16 54 12 42 Q8 28 20 24 Q32 20 36 28 Q40 36 32 38 Q24 40 22 34"
+          stroke="#5A9040" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <ellipse cx="22" cy="30" rx="8" ry="6" fill="#5A9040"/>
+    <circle cx="19" cy="28" r="2" fill="#1A1A1A"/>
+    <circle cx="25" cy="28" r="2" fill="#1A1A1A"/>
+    <path d="M22 34 L18 38 M22 34 L26 38" stroke="#D04040" stroke-width="1.5"/>
+  </svg>`,
+
+  /* 水生 */
+  iruka:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <path d="M8 36 Q10 22 26 20 Q42 18 52 28 Q58 34 54 40 Q48 48 36 46 Q22 44 8 36Z" fill="#4A9AB0"/>
+    <path d="M52 28 L63 20 L59 32 L63 44 L52 38Z" fill="#4A9AB0"/>
+    <circle cx="22" cy="28" r="3"  fill="#1A1A1A"/>
+    <circle cx="21" cy="27" r="1"  fill="white"/>
+    <path d="M30 24 Q32 16 34 24" stroke="#3A8AA0" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M16 40 Q18 48 24 46" stroke="#3A8AA0" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M8 36 Q4 30 6 42Z"  fill="#4A9AB0"/>
+  </svg>`,
+  kani:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="37" rx="18" ry="13" fill="#D05030"/>
+    <circle cx="21" cy="24" r="6"  fill="#D05030"/>
+    <circle cx="43" cy="24" r="6"  fill="#D05030"/>
+    <circle cx="19" cy="22" r="2.5" fill="#1A1A1A"/>
+    <circle cx="45" cy="22" r="2.5" fill="#1A1A1A"/>
+    <path d="M14 31 L4 23 M14 35 L4 35 M14 39 L4 47" stroke="#D05030" stroke-width="4" stroke-linecap="round"/>
+    <path d="M50 31 L60 23 M50 35 L60 35 M50 39 L60 47" stroke="#D05030" stroke-width="4" stroke-linecap="round"/>
+    <path d="M18 45 L14 55 M26 47 L24 57 M38 47 L40 57 M46 45 L50 55" stroke="#D05030" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+  tako:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="26" rx="18" ry="16" fill="#B05090"/>
+    <circle cx="25" cy="22" r="3.5" fill="#1A1A1A"/>
+    <circle cx="24" cy="21" r="1.5" fill="white"/>
+    <circle cx="39" cy="22" r="3.5" fill="#1A1A1A"/>
+    <circle cx="38" cy="21" r="1.5" fill="white"/>
+    <path d="M18 40 Q14 50 16 58" stroke="#B05090" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M24 42 Q22 52 24 60" stroke="#B05090" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M30 43 Q30 54 30 62" stroke="#B05090" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M36 43 Q38 54 36 62" stroke="#B05090" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M42 42 Q46 52 44 60" stroke="#B05090" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M46 40 Q52 48 52 56" stroke="#B05090" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </svg>`,
+  kujira:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <path d="M4 34 Q8 20 26 18 Q46 16 56 28 Q62 34 58 42 Q50 52 32 50 Q12 48 4 34Z" fill="#3A5A9A"/>
+    <path d="M56 28 Q62 18 58 14 Q54 22 56 28Z" fill="#3A5A9A"/>
+    <circle cx="20" cy="27" r="3.5" fill="#1A1A1A"/>
+    <circle cx="19" cy="26" r="1.2" fill="white"/>
+    <path d="M4 34 Q0 28 2 40Z" fill="#3A5A9A"/>
+    <path d="M28 22 Q32 12 36 22" stroke="#2A4A8A" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M36 46 Q40 56 46 50" stroke="#2A4A8A" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </svg>`,
+
+  /* くだもの */
+  ringo:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="38" rx="21" ry="20" fill="#D04040"/>
+    <path d="M32 18 Q36 8 44 10" stroke="#4A8030" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="24" cy="30" rx="5" ry="8" fill="rgba(255,255,255,.18)" transform="rotate(-20,24,30)"/>
+    <ellipse cx="32" cy="55" rx="18" ry="3" fill="#A03030" opacity=".2"/>
+  </svg>`,
+  banana:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <path d="M14 50 Q12 28 28 14 Q38 8 52 18 Q46 22 38 18 Q24 24 22 44Z" fill="#E0C030"/>
+    <path d="M14 50 Q18 46 22 44" stroke="#C0A020" stroke-width="2" fill="none"/>
+    <path d="M52 18 Q54 14 50 10" stroke="#C0A020" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </svg>`,
+
+  /* やさい */
+  ninjin:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <path d="M28 20 Q24 36 26 52 Q30 60 34 52 Q38 36 36 20Z" fill="#E06020"/>
+    <path d="M32 20 Q28 8 22 6 Q26 14 28 20Z" fill="#4A8A2A"/>
+    <path d="M32 20 Q32 6 28 2 Q30 12 32 20Z" fill="#4A8A2A"/>
+    <path d="M32 20 Q36 8 42 6 Q38 14 36 20Z" fill="#4A8A2A"/>
+    <path d="M28 32 Q24 34 22 38" stroke="#D05010" stroke-width="1.5" fill="none"/>
+    <path d="M36 36 Q40 36 42 40" stroke="#D05010" stroke-width="1.5" fill="none"/>
+  </svg>`,
+  tamanegi:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="38" rx="20" ry="18" fill="#D4A820"/>
+    <path d="M20 28 Q32 16 44 28" stroke="#B88A10" stroke-width="1.5" fill="none"/>
+    <path d="M22 34 Q32 24 42 34" stroke="#B88A10" stroke-width="1.5" fill="none"/>
+    <path d="M22 40 Q32 32 42 40" stroke="#B88A10" stroke-width="1.5" fill="none"/>
+    <path d="M32 20 Q30 10 32 4 Q34 10 32 20" fill="#4A8A2A" stroke="#3A7A1A" stroke-width="1"/>
+    <ellipse cx="32" cy="52" rx="18" ry="4" fill="#B88A10" opacity=".3"/>
+  </svg>`,
+  kyuri:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="34" rx="12" ry="22" fill="#5A9A30" transform="rotate(-20,32,34)"/>
+    <ellipse cx="32" cy="34" rx="10" ry="20" fill="#6AAA3A" transform="rotate(-20,32,34)"/>
+    <line x1="22" y1="18" x2="42" y2="50" stroke="#4A8A20" stroke-width="1.5" opacity=".6"/>
+    <line x1="26" y1="15" x2="38" y2="53" stroke="#4A8A20" stroke-width="1" opacity=".4"/>
+    <circle cx="18" cy="22" r="3" fill="#4A8A20"/>
+    <path d="M18 22 Q16 14 20 10" stroke="#4A8A20" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </svg>`,
+  toukmorokoshi:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="36" rx="13" ry="20" fill="#E8C030"/>
+    <path d="M22 20 Q32 14 42 20" stroke="#D0A820" stroke-width="1" fill="none"/>
+    <circle cx="26" cy="28" r="2.5" fill="#D0A820"/>
+    <circle cx="32" cy="28" r="2.5" fill="#D0A820"/>
+    <circle cx="38" cy="28" r="2.5" fill="#D0A820"/>
+    <circle cx="26" cy="34" r="2.5" fill="#D0A820"/>
+    <circle cx="32" cy="34" r="2.5" fill="#D0A820"/>
+    <circle cx="38" cy="34" r="2.5" fill="#D0A820"/>
+    <circle cx="26" cy="40" r="2.5" fill="#D0A820"/>
+    <circle cx="32" cy="40" r="2.5" fill="#D0A820"/>
+    <circle cx="38" cy="40" r="2.5" fill="#D0A820"/>
+    <circle cx="26" cy="46" r="2.5" fill="#D0A820"/>
+    <circle cx="32" cy="46" r="2.5" fill="#D0A820"/>
+    <circle cx="38" cy="46" r="2.5" fill="#D0A820"/>
+    <path d="M20 18 Q16 10 20 6 Q22 12 24 16" fill="#5A9A30"/>
+    <path d="M32 16 Q30 6 34 4 Q34 10 36 16" fill="#5A9A30"/>
+    <path d="M44 18 Q48 10 44 6 Q42 12 40 16" fill="#5A9A30"/>
+  </svg>`,
+
+  /* のりもの（エンジン） */
+  kuruma:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <rect x="6" y="30" width="52" height="20" rx="6" fill="#3A7CB8"/>
+    <rect x="14" y="18" width="36" height="18" rx="6" fill="#5A9CD8"/>
+    <rect x="18" y="22" width="12" height="10" rx="2" fill="#AED8F0"/>
+    <rect x="34" y="22" width="12" height="10" rx="2" fill="#AED8F0"/>
+    <circle cx="17" cy="50" r="8" fill="#2A2A2A"/>
+    <circle cx="17" cy="50" r="4" fill="#888"/>
+    <circle cx="47" cy="50" r="8" fill="#2A2A2A"/>
+    <circle cx="47" cy="50" r="4" fill="#888"/>
+    <rect x="48" y="34" width="6" height="4" rx="1" fill="#F0E060"/>
+    <rect x="10" y="34" width="6" height="4" rx="1" fill="#F04040" opacity=".8"/>
+  </svg>`,
+  hikouki:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <path d="M8 34 L56 24 L52 34 L56 44Z" fill="#E0E0E0"/>
+    <path d="M20 34 L36 16 L40 22 L28 34Z" fill="#C8C8C8"/>
+    <path d="M20 34 L36 52 L40 46 L28 34Z" fill="#C8C8C8"/>
+    <circle cx="48" cy="34" r="4" fill="#AED8F0"/>
+    <ellipse cx="36" cy="34" rx="4" ry="3" fill="#D04040"/>
+  </svg>`,
+  fune:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <path d="M8 38 Q10 54 32 56 Q54 54 56 38Z" fill="#3A7CB8"/>
+    <rect x="28" y="14" width="4" height="26" fill="#8B5E38"/>
+    <polygon points="32,14 52,30 32,30" fill="#E8C060"/>
+    <path d="M8 38 L56 38" stroke="#2A5C98" stroke-width="2"/>
+    <ellipse cx="32" cy="56" rx="22" ry="3" fill="#2A5C98" opacity=".3"/>
+  </svg>`,
+  rocket:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="24" rx="10" ry="16" fill="#D0D8E8"/>
+    <rect x="22" y="28" width="20" height="22" fill="#C0C8D8"/>
+    <polygon points="32,6 22,22 42,22" fill="#D04040"/>
+    <rect x="26" y="30" width="12" height="10" rx="3" fill="#AED8F0"/>
+    <path d="M22 44 L14 54 L22 50Z" fill="#E07030"/>
+    <path d="M42 44 L50 54 L42 50Z" fill="#E07030"/>
+    <ellipse cx="32" cy="50" rx="6" ry="4" fill="#E08040" opacity=".8"/>
+    <path d="M28 54 Q32 62 36 54" fill="#E06020" opacity=".9"/>
+  </svg>`,
+
+  /* のりもの（人力） */
+  jitensha:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <circle cx="16" cy="44" r="14" stroke="#3A3A3A" stroke-width="3.5" fill="none"/>
+    <circle cx="48" cy="44" r="14" stroke="#3A3A3A" stroke-width="3.5" fill="none"/>
+    <circle cx="16" cy="44" r="3" fill="#3A3A3A"/>
+    <circle cx="48" cy="44" r="3" fill="#3A3A3A"/>
+    <line x1="16" y1="44" x2="30" y2="22" stroke="#3A3A3A" stroke-width="3"/>
+    <line x1="16" y1="44" x2="34" y2="34" stroke="#3A3A3A" stroke-width="2.5"/>
+    <line x1="34" y1="34" x2="48" y2="44" stroke="#3A3A3A" stroke-width="2.5"/>
+    <line x1="34" y1="34" x2="30" y2="22" stroke="#3A3A3A" stroke-width="2.5"/>
+    <line x1="26" y1="22" x2="36" y2="22" stroke="#3A3A3A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="34" cy="34" r="4" fill="#888" stroke="#3A3A3A" stroke-width="1.5"/>
+    <line x1="34" y1="38" x2="30" y2="46" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="34" y1="38" x2="38" y2="46" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="42" y1="20" x2="52" y2="24" stroke="#3A3A3A" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>`,
+  rowboat:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <path d="M8 42 Q10 56 32 58 Q54 56 56 42Z" fill="#9E6840"/>
+    <path d="M8 42 L56 42" stroke="#7A5020" stroke-width="2"/>
+    <rect x="20" y="34" width="24" height="4" rx="2" fill="#7A5020"/>
+    <line x1="4"  y1="36" x2="32" y2="44" stroke="#5A3A10" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="60" y1="36" x2="32" y2="44" stroke="#5A3A10" stroke-width="2.5" stroke-linecap="round"/>
+    <ellipse cx="4"  cy="35" rx="5" ry="3" fill="#7A5020"/>
+    <ellipse cx="60" cy="35" rx="5" ry="3" fill="#7A5020"/>
+  </svg>`,
+
+  /* とぶ鳥 */
+  tsubame:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="32" rx="8" ry="5" fill="#2A2A4A"/>
+    <path d="M24 32 Q10 22 4 28 Q14 32 24 34Z" fill="#2A2A4A"/>
+    <path d="M40 32 Q54 22 60 28 Q50 32 40 34Z" fill="#2A2A4A"/>
+    <path d="M24 34 Q10 36 6 44 Q16 38 24 36Z" fill="#3A3A5A"/>
+    <path d="M40 34 Q54 36 58 44 Q48 38 40 36Z" fill="#3A3A5A"/>
+    <ellipse cx="36" cy="30" rx="4" ry="3" fill="#E8E8E8"/>
+    <path d="M38 32 L42 34 L40 36Z" fill="#E06020"/>
+    <circle cx="38" cy="29" r="1.5" fill="#1A1A1A"/>
+  </svg>`,
+  washi:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="32" rx="9" ry="6" fill="#8B6040"/>
+    <path d="M23 30 Q6 18 2 26 Q12 28 23 34Z"  fill="#8B6040"/>
+    <path d="M41 30 Q58 18 62 26 Q52 28 41 34Z" fill="#8B6040"/>
+    <path d="M23 34 Q8 38 6 48 Q16 40 23 36Z"  fill="#7A5030"/>
+    <path d="M41 34 Q56 38 58 48 Q48 40 41 36Z" fill="#7A5030"/>
+    <ellipse cx="38" cy="30" rx="5" ry="3.5" fill="#F0E0C0"/>
+    <path d="M40 32 L46 35 L42 37Z" fill="#E8A020"/>
+    <circle cx="40" cy="28" r="2" fill="#1A1A1A"/>
+    <circle cx="40" cy="27.5" r=".8" fill="white"/>
+  </svg>`,
+
+  /* とばない鳥 */
+  penguin:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="38" rx="14" ry="18" fill="#2A2A3A"/>
+    <ellipse cx="32" cy="40" rx="9"  ry="13" fill="#F0F0F0"/>
+    <ellipse cx="32" cy="18" rx="10" ry="9"  fill="#2A2A3A"/>
+    <ellipse cx="32" cy="16" rx="7"  ry="6"  fill="#F0F0F0"/>
+    <circle cx="29" cy="14" r="2" fill="#1A1A1A"/>
+    <circle cx="35" cy="14" r="2" fill="#1A1A1A"/>
+    <path d="M30 18 L28 20 L32 20 L34 20 L32 18Z" fill="#E8A020"/>
+    <path d="M18 32 L10 40 L18 44Z" fill="#2A2A3A"/>
+    <path d="M46 32 L54 40 L46 44Z" fill="#2A2A3A"/>
+    <ellipse cx="26" cy="54" rx="5" ry="3" fill="#E8A020"/>
+    <ellipse cx="38" cy="54" rx="5" ry="3" fill="#E8A020"/>
+  </svg>`,
+  niwatori:`<svg width="70" height="70" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="40" rx="16" ry="14" fill="#E8C060"/>
+    <ellipse cx="32" cy="24" rx="11" ry="10" fill="#E8C060"/>
+    <path d="M28 16 Q30 8 34 10 Q32 16 36 14 Q34 20 32 18Z" fill="#D04040"/>
+    <circle cx="36" cy="22" r="2.5" fill="#1A1A1A"/>
+    <circle cx="36" cy="21.5" r=".8" fill="white"/>
+    <path d="M40 26 L48 24 L44 28Z" fill="#E06020"/>
+    <path d="M38 28 Q44 32 42 36" fill="#D04040"/>
+    <line x1="26" y1="52" x2="22" y2="62" stroke="#E06020" stroke-width="3" stroke-linecap="round"/>
+    <line x1="32" y1="53" x2="32" y2="63" stroke="#E06020" stroke-width="3" stroke-linecap="round"/>
+    <line x1="38" y1="52" x2="42" y2="62" stroke="#E06020" stroke-width="3" stroke-linecap="round"/>
+    <path d="M22 46 L14 50 L18 44Z" fill="#E8C060"/>
+    <path d="M42 46 L50 50 L46 44Z" fill="#E8C060"/>
+  </svg>`,
+};
+
+/* ══════════════════════════════════════
+   問題セット（固定10問・カテゴリ順）
+══════════════════════════════════════ */
+const ALL_QS = [
+  /* ① いろ（ウォームアップ） */
+  {
+    tag:'🎨 いろ',
+    text:'いろが ちがうのは どれ？\nほかは ぜんぶ あか！',
+    hint:'いろを みてね',
+    explain:'',
+    items:[
+      {svg:SH.circle(C.red),    label:'まる',    odd:false},
+      {svg:SH.square(C.red),    label:'しかく',  odd:false},
+      {svg:SH.triangle(C.blue), label:'さんかく',odd:true},
+      {svg:SH.diamond(C.red),   label:'ひし',    odd:false},
+    ],
+  },
+  /* ② かたち（ウォームアップ） */
+  {
+    tag:'🔷 かたち',
+    text:'かたちが ちがうのは どれ？\nほかは ぜんぶ まる！',
+    hint:'かたちを みてね',
+    explain:'',
+    items:[
+      {svg:SH.circle(C.red),     label:'まる',    odd:false},
+      {svg:SH.circle(C.blue),    label:'まる',    odd:false},
+      {svg:SH.triangle(C.green), label:'さんかく',odd:true},
+      {svg:SH.circle(C.yellow),  label:'まる',    odd:false},
+    ],
+  },
+  /* ③ こんちゅう vs どうぶつ その1 */
+  {
+    tag:'🐛 こんちゅく vs どうぶつ',
+    text:'なかまはずれは どれ？\nほかは ぜんぶ こんちゅう！',
+    hint:'むしか どうぶつか かんがえよう',
+    explain:'ちょうちょ・とんぼ・ありは むし（こんちゅう）だよ。ねこは どうぶつ！',
+    items:[
+      {svg:IL.cho,   label:'ちょうちょ',odd:false},
+      {svg:IL.tombo, label:'とんぼ',    odd:false},
+      {svg:IL.neko,  label:'ねこ',      odd:true},
+      {svg:IL.ari,   label:'あり',      odd:false},
+    ],
+  },
+  /* ④ こんちゅう vs どうぶつ その2 */
+  {
+    tag:'🐛 こんちゅう vs どうぶつ',
+    text:'なかまはずれは どれ？\nほかは ぜんぶ こんちゅう！',
+    hint:'むしか どうぶつか かんがえよう',
+    explain:'かぶとむし・はち・ちょうちょは むし。くまは どうぶつ！',
+    items:[
+      {svg:IL.kabuto,label:'かぶとむし',odd:false},
+      {svg:IL.hachi, label:'はち',      odd:false},
+      {svg:IL.kuma,  label:'くま',      odd:true},
+      {svg:IL.cho,   label:'ちょうちょ',odd:false},
+    ],
+  },
+  /* ⑤ どうぶつ vs きょうりゅう その1 */
+  {
+    tag:'🦕 どうぶつ vs きょうりゅう',
+    text:'なかまはずれは どれ？\nほかは ぜんぶ きょうりゅう！',
+    hint:'むかし いきていた きょうりゅうは どれ？',
+    explain:'ティラノサウルス・トリケラトプス・ブラキオサウルスは きょうりゅう。うさぎは いま いる どうぶつ！',
+    items:[
+      {svg:IL.trex,   label:'ティラノサウルス',odd:false},
+      {svg:IL.tricera,label:'トリケラトプス',  odd:false},
+      {svg:IL.usagi,  label:'うさぎ',          odd:true},
+      {svg:IL.brachi, label:'ブラキオサウルス',odd:false},
+    ],
+  },
+  /* ⑥ どうぶつ vs きょうりゅう その2 */
+  {
+    tag:'🦕 どうぶつ vs きょうりゅう',
+    text:'なかまはずれは どれ？\nほかは ぜんぶ どうぶつ！',
+    hint:'いま いきている どうぶつは どれ？',
+    explain:'ねこ・いぬ・くまは いま いる どうぶつ。プテラノドンは きょうりゅう（よくりゅう）！',
+    items:[
+      {svg:IL.neko,  label:'ねこ',   odd:false},
+      {svg:IL.ptero, label:'プテラノドン',odd:true},
+      {svg:IL.inu,   label:'いぬ',   odd:false},
+      {svg:IL.kuma,  label:'くま',   odd:false},
+    ],
+  },
+  /* ⑦ たまごを うむ？ その1 */
+  {
+    tag:'🥚 たまごを うむ？',
+    text:'なかまはずれは どれ？\nほかは みんな たまごを うむ！',
+    hint:'たまごを うまないのは どれかな？',
+    explain:'とり・かめ・さかなは たまごを うむよ。ねこはたまごを うまない（赤ちゃんを うむ）！',
+    items:[
+      {svg:IL.tori,  label:'とり',  odd:false},
+      {svg:IL.kame,  label:'かめ',  odd:false},
+      {svg:IL.neko,  label:'ねこ',  odd:true},
+      {svg:IL.sakana,label:'さかな',odd:false},
+    ],
+  },
+  /* ⑧ たまごを うむ？ その2 */
+  {
+    tag:'🥚 たまごを うむ？',
+    text:'なかまはずれは どれ？\nほかは みんな たまごを うむ！',
+    hint:'たまごを うまないのは どれかな？',
+    explain:'とんぼ・かぶとむし・へびは たまごを うむよ。いぬはたまごを うまない（赤ちゃんを うむ）！',
+    items:[
+      {svg:IL.tombo,  label:'とんぼ',    odd:false},
+      {svg:IL.kabuto, label:'かぶとむし',odd:false},
+      {svg:IL.inu,    label:'いぬ',      odd:true},
+      {svg:IL.hebi,   label:'へび',      odd:false},
+    ],
+  },
+  /* ⑨ みずの なか vs りく その1 */
+  {
+    tag:'🌊 すみか：みず vs りく',
+    text:'なかまはずれは どれ？\nほかは みんな みずの なかに すむ！',
+    hint:'うみや かわに すんでいるのは どれ？',
+    explain:'いるか・さかな・かには みずの なかに すむよ。ぞうは りくの どうぶつ！',
+    items:[
+      {svg:IL.iruka, label:'いるか',odd:false},
+      {svg:IL.sakana,label:'さかな',odd:false},
+      {svg:IL.zou,   label:'ぞう',  odd:true},
+      {svg:IL.kani,  label:'かに',  odd:false},
+    ],
+  },
+  /* ⑩ みずの なか vs りく その2 */
+  {
+    tag:'🌊 すみか：みず vs りく',
+    text:'なかまはずれは どれ？\nほかは みんな みずの なかに すむ！',
+    hint:'うみや かわに すんでいるのは どれ？',
+    explain:'いるか・たこ・くじらは みずの なか。うさぎは りくの どうぶつ！',
+    items:[
+      {svg:IL.iruka, label:'いるか',odd:false},
+      {svg:IL.tako,  label:'たこ',  odd:false},
+      {svg:IL.usagi, label:'うさぎ',odd:true},
+      {svg:IL.kujira,label:'くじら',odd:false},
+    ],
+  },
+  /* ⑪ やさい vs くだもの その1 */
+  {
+    tag:'🥕 やさい vs くだもの',
+    text:'なかまはずれは どれ？',
+    hint:'やさいは はたけで そだつ たべもの。くだものは きに なるよ',
+    explain:'にんじん・たまねぎ・きゅうりは やさい。りんごは くだもの！',
+    items:[
+      {svg:IL.ninjin,   label:'にんじん',odd:false},
+      {svg:IL.tamanegi, label:'たまねぎ',odd:false},
+      {svg:IL.ringo,    label:'りんご',  odd:true},
+      {svg:IL.kyuri,    label:'きゅうり',odd:false},
+    ],
+  },
+  /* ⑫ やさい vs くだもの その2 */
+  {
+    tag:'🌽 やさい vs くだもの',
+    text:'なかまはずれは どれ？',
+    hint:'くだものは あまくて きに なるよ。やさいは はたけで そだつよ',
+    explain:'とうもろこし・にんじん・きゅうりは やさい。バナナは くだもの！',
+    items:[
+      {svg:IL.toukmorokoshi,label:'とうもろこし',odd:false},
+      {svg:IL.ninjin,       label:'にんじん',    odd:false},
+      {svg:IL.banana,       label:'バナナ',      odd:true},
+      {svg:IL.kyuri,        label:'きゅうり',    odd:false},
+    ],
+  },
+  /* ⑬ エンジンで動く vs 人力 その1 */
+  {
+    tag:'🚗 エンジン vs 人力',
+    text:'なかまはずれは どれ？',
+    hint:'じぶんの ちからで うごかすのは どれ？',
+    explain:'くるま・ひこうき・ふねは エンジンで うごくよ。じてんしゃは じぶんの あしで こぐ！',
+    items:[
+      {svg:IL.kuruma,   label:'くるま',    odd:false},
+      {svg:IL.hikouki,  label:'ひこうき',  odd:false},
+      {svg:IL.jitensha, label:'じてんしゃ',odd:true},
+      {svg:IL.fune,     label:'ふね',      odd:false},
+    ],
+  },
+  /* ⑭ エンジンで動く vs 人力 その2 */
+  {
+    tag:'🚀 エンジン vs 人力',
+    text:'なかまはずれは どれ？',
+    hint:'エンジンや もえるものの ちからで うごくのは どれ？',
+    explain:'くるま・ロケット・ひこうきは エンジンで うごくよ。ボートは オールで こぐ！',
+    items:[
+      {svg:IL.kuruma,  label:'くるま',  odd:false},
+      {svg:IL.rocket,  label:'ロケット',odd:false},
+      {svg:IL.rowboat, label:'ボート',  odd:true},
+      {svg:IL.hikouki, label:'ひこうき',odd:false},
+    ],
+  },
+  /* ⑮ とぶ vs とばない その1 */
+  {
+    tag:'🐦 とぶ vs とばない',
+    text:'なかまはずれは どれ？',
+    hint:'そらを とべる とりは どれ？',
+    explain:'つばめ・わしは そらを とべるよ。ペンギンは とべない！あしで およぐのが とくい！',
+    items:[
+      {svg:IL.tsubame, label:'つばめ',  odd:false},
+      {svg:IL.washi,   label:'わし',    odd:false},
+      {svg:IL.penguin, label:'ペンギン',odd:true},
+      {svg:IL.tori,    label:'とり',    odd:false},
+    ],
+  },
+  /* ⑯ とぶ vs とばない その2 */
+  {
+    tag:'🐔 とぶ vs とばない',
+    text:'なかまはずれは どれ？',
+    hint:'そらを とべる とりは どれ？ にわとりは とべるかな？',
+    explain:'つばめ・わしは そらを とべるよ。にわとりは つばさが あっても とべない！',
+    items:[
+      {svg:IL.tsubame,  label:'つばめ',  odd:false},
+      {svg:IL.niwatori, label:'にわとり',odd:true},
+      {svg:IL.washi,    label:'わし',    odd:false},
+      {svg:IL.tori,     label:'とり',    odd:false},
+    ],
+  },
+];
+
+/* ══════════════════════════════════════
+   ゲームエンジン
+══════════════════════════════════════ */
+const TOTAL = ALL_QS.length; // 16
+let qs=[], idx=0, score=0, answered=false;
+
+function shuffle(a){return[...a].sort(()=>Math.random()-.5)}
+
+function init(){
+  // 問題の順序はシャッフルするが16問すべて使う
+  qs = shuffle(ALL_QS);
+  idx=0; score=0; answered=false;
+  document.getElementById('completeScreen').classList.remove('show');
+  document.getElementById('qCard').style.display='flex';
+  document.getElementById('grid').style.display='grid';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('explain').className='explain';
+  document.getElementById('nextBtn').className='next-btn';
+  buildDots(); buildStars(); render();
+}
+
+function buildDots(){
+  const w=document.getElementById('dots'); w.innerHTML='';
+  for(let i=0;i<TOTAL;i++){
+    const d=document.createElement('div');
+    d.className='dot'+(i===0?' active':''); d.id='d'+i; w.appendChild(d);
+  }
+}
+function buildStars(){
+  const w=document.getElementById('starRow'); w.innerHTML='';
+  for(let i=0;i<TOTAL;i++){
+    const s=document.createElement('div');
+    s.className='star'; s.id='s'+i; s.textContent='☆'; w.appendChild(s);
+  }
+}
+function updateDots(){
+  for(let i=0;i<TOTAL;i++){
+    const d=document.getElementById('d'+i); if(!d) return;
+    d.className='dot'+(i<idx?'done':i===idx?' active':'');
+  }
+}
+
+function showHint(){
+  const q=qs[idx];
+  const bubble=document.getElementById('hintBubble');
+  bubble.textContent=q.hint;
+  bubble.classList.add('show');
+  document.getElementById('hintBtn').style.display='none';
+}
+
+function render(){
+  answered=false; updateDots();
+  const q=qs[idx];
+  document.getElementById('qTag').textContent  = q.tag;
+  document.getElementById('qText').textContent = 'なかまはずれは　どれ？';
+  document.getElementById('hintBtn').style.display='inline-block';
+  document.getElementById('hintBubble').className='hint-bubble';
+  document.getElementById('hintBubble').textContent='';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('explain').className ='explain';
+  document.getElementById('nextBtn').className ='next-btn';
+
+  const grid=document.getElementById('grid'); grid.innerHTML='';
+  shuffle(q.items).forEach(item=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`<div class="card-img">${item.svg}</div><div class="card-label">${item.label}</div>`;
+    card.addEventListener('click',()=>tap(card,item.odd,grid,q.explain));
+    grid.appendChild(card);
+  });
+}
+
+function tap(card,isOdd,grid,explain){
+  if(answered) return;
+  answered=true;
+  grid.querySelectorAll('.card').forEach(c=>c.classList.add('locked'));
+  const fb=document.getElementById('feedback');
+  const ex=document.getElementById('explain');
+  if(isOdd){
+    card.classList.add('correct');
+    score++;
+    const s=document.getElementById('s'+idx);
+    if(s){s.textContent='⭐';s.classList.add('earned')}
+    fb.textContent='⭕ せいかい！ よくわかったね！';
+    fb.className='feedback ok show';
+  } else {
+    card.classList.add('wrong');
+    grid.querySelectorAll('.card').forEach(c=>{if(c!==card)c.classList.add('faded')});
+    fb.textContent='❌ ちがうよ！ もういちど かんがえてみよう！';
+    fb.className='feedback ng show';
+  }
+  if(explain){ex.textContent='📖 '+explain; ex.className='explain show';}
+  document.getElementById('nextBtn').className='next-btn show';
+}
+
+function next(){
+  idx++;
+  if(idx>=TOTAL){showComplete();return;}
+  render();
+}
+
+function showComplete(){
+  document.getElementById('qCard').style.display='none';
+  document.getElementById('grid').style.display='none';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('explain').className='explain';
+  document.getElementById('nextBtn').className='next-btn';
+  document.getElementById('dots').innerHTML='';
+
+  const emoji = score===TOTAL ? '🏆' : score>=12 ? '🎊' : score>=8 ? '🌟' : '🌱';
+  document.querySelector('.big-emoji').textContent = emoji;
+
+  const cs=document.getElementById('completeScreen');
+  cs.classList.add('show');
+  const pct=Math.round(score/TOTAL*100);
+  const msg = score===TOTAL ? 'ぜんもん せいかい！ かんぺき！！'
+            : score>=12    ? 'すごい！ よくできました！'
+            : score>=8     ? 'もうすこし！ がんばったね！'
+            :                'むずかしかったね！ もういちど ちょうせん！';
+  document.getElementById('completeSub').innerHTML=
+    `${TOTAL}もんちゅう <strong>${score}もん</strong> せいかい！（${pct}%）<br>${msg}`;
+}
+
+function restart(){init()}
+init();
+</script>
+</body>
+</html>
