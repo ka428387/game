@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>かずロケット🚀</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
+
+* { box-sizing:border-box; margin:0; padding:0; touch-action:manipulation; }
+
+body {
+  font-family:'Nunito',sans-serif;
+  background:radial-gradient(ellipse at top,#0d1b6e 0%,#0a0a2e 70%);
+  min-height:100vh; display:flex; flex-direction:column;
+  align-items:center; justify-content:flex-start;
+  overflow-x:hidden; overflow-y:auto; padding:10px 10px 40px;
+}
+
+.stars { position:fixed; inset:0; pointer-events:none; z-index:0; }
+.star  { position:absolute; border-radius:50%; background:white;
+         animation:twinkle var(--dur,2s) ease-in-out infinite alternate; }
+@keyframes twinkle { from{opacity:.2} to{opacity:1} }
+
+.screen { position:relative; z-index:10; width:100%; max-width:540px;
+          display:none; flex-direction:column; align-items:center;
+          animation:fadeIn .4s ease; }
+.screen.active { display:flex; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+
+/* ── コース選択 ── */
+.main-title { font-size:2.2rem; font-weight:900; color:#fff;
+  text-shadow:0 0 20px #82b1ff,0 3px 0 #1a237e; margin:16px 0 4px; letter-spacing:2px; }
+
+/* ロケット表示パネル */
+.rocket-panel {
+  width:100%; background:rgba(255,255,255,.08);
+  border:2px solid rgba(255,255,255,.18); border-radius:24px;
+  padding:14px 18px; margin-bottom:16px;
+  display:flex; align-items:center; gap:14px;
+}
+.panel-rocket { font-size:3rem; filter:drop-shadow(0 0 12px #ffd740); animation:float 3s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+.panel-info { flex:1; }
+.panel-name { font-size:1rem; color:#ffd740; font-weight:900; margin-bottom:4px; }
+.panel-score { font-size:.85rem; color:#90caf9; font-weight:700; margin-bottom:6px; }
+.panel-next { font-size:.8rem; color:rgba(255,255,255,.7); font-weight:700; }
+.star-bar-track { width:100%; height:8px; background:rgba(255,255,255,.15); border-radius:8px; margin-top:5px; overflow:hidden; }
+.star-bar-fill  { height:100%; background:linear-gradient(90deg,#ffd740,#ff6f00); border-radius:8px; transition:width .6s ease; }
+
+.sub-title { font-size:.95rem; color:#90caf9; margin-bottom:14px; font-weight:700; }
+.course-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; width:100%; padding:0 4px; }
+.course-btn {
+  border:none; border-radius:24px; padding:22px 12px; cursor:pointer;
+  font-family:'Nunito',sans-serif; font-weight:900; text-align:center;
+  box-shadow:0 6px 0 rgba(0,0,0,.3); transition:transform .1s,box-shadow .1s;
+}
+.course-btn:active { transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,.3); }
+.course-btn .icon { font-size:2.6rem; display:block; margin-bottom:6px; }
+.course-btn .name { font-size:1.1rem; color:#fff; display:block; text-shadow:0 1px 4px rgba(0,0,0,.4); }
+.course-btn .desc { font-size:.78rem; color:rgba(255,255,255,.85); display:block; margin-top:3px; font-weight:700; }
+.cc{background:linear-gradient(145deg,#1565c0,#0d47a1);}
+.ca{background:linear-gradient(145deg,#2e7d32,#1b5e20);}
+.cs{background:linear-gradient(145deg,#6a1b9a,#4a148c);}
+.cm{background:linear-gradient(145deg,#e65100,#bf360c);}
+.cd{background:linear-gradient(145deg,#00695c,#004d40);}
+.cx{background:linear-gradient(145deg,#880e4f,#560027);}
+
+/* ── レベル選択 ── */
+.back-btn {
+  align-self:flex-start; background:rgba(255,255,255,.12);
+  border:2px solid rgba(255,255,255,.25); border-radius:14px; padding:8px 20px;
+  color:#fff; font-family:'Nunito',sans-serif; font-size:1rem; font-weight:700;
+  cursor:pointer; margin-bottom:16px;
+}
+.course-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+.course-header .hicon { font-size:2.4rem; }
+.course-header .hinfo h2 { font-size:1.4rem; color:#fff; font-weight:900; }
+.course-header .hinfo p  { font-size:.85rem; color:#90caf9; font-weight:700; }
+.level-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; width:100%; }
+.level-btn {
+  border:none; border-radius:20px; padding:20px 10px; min-height:80px; cursor:pointer;
+  font-family:'Nunito',sans-serif; font-weight:900; color:#fff;
+  background:linear-gradient(145deg,#3949ab,#1a237e);
+  box-shadow:0 5px 0 rgba(0,0,0,.3); transition:transform .1s,box-shadow .1s;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+}
+.level-btn:active { transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.3); }
+.level-btn .lv-num  { font-size:1.5rem; }
+.level-btn .lv-hint { font-size:.75rem; color:#90caf9; font-weight:700; }
+
+/* ── ゲーム画面 ── */
+.game-header { width:100%; display:flex; align-items:center; justify-content:space-between; padding:4px 0; margin-bottom:6px; }
+.game-title  { font-size:1.1rem; font-weight:900; color:#fff; }
+.game-rocket-badge { font-size:1.8rem; filter:drop-shadow(0 0 8px #ffd740); }
+.level-badge { background:linear-gradient(135deg,#ff6f00,#ffd740); color:#fff;
+  font-size:.9rem; font-weight:900; padding:4px 12px; border-radius:20px; box-shadow:0 4px 0 #e65100; }
+
+.score-bar  { display:flex; gap:8px; justify-content:center; margin-bottom:8px; flex-wrap:wrap; }
+.score-pill { background:rgba(255,255,255,.15); border:2px solid rgba(255,255,255,.3);
+  border-radius:20px; padding:3px 12px; color:#fff; font-size:.85rem; font-weight:700; }
+.score-pill span { color:#ffd740; }
+
+.card { background:linear-gradient(160deg,rgba(255,255,255,.18),rgba(255,255,255,.06));
+  border:2px solid rgba(255,255,255,.25); border-radius:28px; padding:18px 18px 14px;
+  width:100%; text-align:center; backdrop-filter:blur(10px);
+  box-shadow:0 8px 32px rgba(0,0,0,.4); margin-bottom:12px; }
+.question-text  { font-size:1.1rem; color:#e3f2fd; font-weight:700; margin-bottom:10px; min-height:26px; }
+.emojis-display { font-size:2.2rem; line-height:1.5; min-height:52px; letter-spacing:3px; word-break:break-all; margin-bottom:8px; }
+.formula-row    { font-size:2rem; color:#ffd740; font-weight:900; min-height:52px;
+  display:flex; align-items:center; justify-content:center; gap:10px; }
+.question-mark  { width:48px; height:48px; background:rgba(255,255,255,.18);
+  border:2px dashed rgba(255,255,255,.5); border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.6rem; color:#fff; animation:pulse-q 1.2s ease-in-out infinite; }
+@keyframes pulse-q { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+
+.choices { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; width:100%; margin-bottom:12px; }
+.choice-btn {
+  background:linear-gradient(160deg,#3949ab,#1a237e); border:3px solid rgba(255,255,255,.3);
+  border-radius:20px; color:#fff; font-family:'Nunito',sans-serif;
+  font-size:1.8rem; font-weight:900; padding:16px 10px; cursor:pointer;
+  box-shadow:0 6px 0 rgba(0,0,0,.25); transition:transform .1s,box-shadow .1s;
+}
+.choice-btn:active  { transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,.25); }
+.choice-btn.correct { background:linear-gradient(160deg,#00c853,#1b5e20)!important; border-color:#69f0ae; animation:pop .35s ease; }
+.choice-btn.wrong   { background:linear-gradient(160deg,#f44336,#b71c1c)!important; border-color:#ff8a80; animation:shake .35s ease; }
+@keyframes pop   { 0%{transform:scale(1)} 40%{transform:scale(1.12)} 100%{transform:scale(1)} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+
+.rocket-area { width:100%; height:70px; position:relative; margin-bottom:6px; overflow:visible; }
+.rocket-game { font-size:2.8rem; position:absolute; left:10%;
+  transition:left .6s cubic-bezier(.22,1,.36,1); filter:drop-shadow(0 0 10px #ffd740); }
+.rocket-game.launch { left:110%!important; transition:left .8s cubic-bezier(.5,0,1,.5)!important; }
+.progress-track { width:100%; height:10px; background:rgba(255,255,255,.1);
+  border-radius:10px; position:absolute; bottom:6px; overflow:hidden; }
+.progress-fill  { height:100%; background:linear-gradient(90deg,#ffd740,#ff6f00);
+  border-radius:10px; transition:width .5s ease; }
+
+.bottom-btns { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; justify-content:center; }
+.menu-btn  { background:rgba(255,255,255,.1); border:2px solid rgba(255,255,255,.2);
+  border-radius:12px; padding:7px 18px; color:#fff;
+  font-family:'Nunito',sans-serif; font-size:.9rem; font-weight:700; cursor:pointer; }
+.sound-btn { background:rgba(255,255,255,.12); border:2px solid rgba(255,255,255,.25);
+  border-radius:12px; padding:7px 14px; color:#fff;
+  font-family:'Nunito',sans-serif; font-size:.85rem; font-weight:700; cursor:pointer; }
+.sound-btn.on  { background:rgba(255,215,64,.25); border-color:#ffd740; color:#ffd740; }
+.sound-btn.off { background:rgba(255,255,255,.07); color:rgba(255,255,255,.45); }
+
+/* フィードバック */
+.feedback { position:fixed; top:40%; left:50%; transform:translate(-50%,-50%);
+  font-size:3.5rem; font-weight:900; pointer-events:none; z-index:100; opacity:0;
+  text-shadow:0 0 20px currentColor; }
+.feedback.show { opacity:1; animation:feedback-pop .8s ease forwards; }
+@keyframes feedback-pop {
+  0%  {transform:translate(-50%,-50%) scale(.5);opacity:1}
+  60% {transform:translate(-50%,-50%) scale(1.2);opacity:1}
+  100%{transform:translate(-50%,-70%) scale(1);opacity:0}
+}
+
+/* オーバーレイ共通 */
+.overlay { position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.75);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity .3s; }
+.overlay.show { opacity:1; pointer-events:all; }
+.overlay-box  { border-radius:32px; padding:28px 36px; text-align:center; animation:lvbounce .5s ease; max-width:340px; width:90%; }
+@keyframes lvbounce { 0%{transform:scale(.5)} 70%{transform:scale(1.08)} 100%{transform:scale(1)} }
+.ov-orange { background:linear-gradient(135deg,#ff6f00,#ffd740); box-shadow:0 8px 40px rgba(255,111,0,.6); }
+.ov-purple { background:linear-gradient(135deg,#7b1fa2,#e040fb); box-shadow:0 8px 40px rgba(123,31,162,.6); }
+.ov-gold   { background:linear-gradient(135deg,#f9a825,#fff176,#f9a825); box-shadow:0 8px 40px rgba(249,168,37,.8); }
+.overlay-title { font-size:2rem; color:#fff; font-weight:900; margin-bottom:6px; text-shadow:0 2px 8px rgba(0,0,0,.3); }
+.overlay-sub   { font-size:1rem; color:rgba(255,255,255,.95); margin-bottom:16px; font-weight:700; line-height:1.5; }
+.overlay-rocket-big { font-size:5rem; margin:8px 0; filter:drop-shadow(0 0 16px #ffd740); animation:float 2s ease-in-out infinite; }
+.overlay-btn   { background:#fff; border:none; border-radius:20px;
+  font-family:'Nunito',sans-serif; font-size:1.1rem; font-weight:900;
+  padding:10px 28px; cursor:pointer; box-shadow:0 4px 0 rgba(0,0,0,.2); margin:4px; }
+.overlay-btn:active { transform:translateY(3px); }
+.ob-orange { color:#ff6f00; } .ob-purple { color:#7b1fa2; } .ob-gold { color:#e65100; }
+
+/* 紙吹雪 */
+.confetti-piece { position:fixed; width:10px; height:14px; border-radius:3px;
+  pointer-events:none; z-index:199; animation:cffall var(--dur,1.5s) ease-in forwards; }
+@keyframes cffall { 0%{transform:translateY(-20px) rotate(0);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+
+<!-- コース選択 -->
+<div class="screen active" id="scrCourse">
+  <div class="main-title">🚀 かずロケット</div>
+
+  <!-- ロケットパネル -->
+  <div class="rocket-panel">
+    <div class="panel-rocket" id="panelRocket">🚀</div>
+    <div class="panel-info">
+      <div class="panel-name" id="panelName">ふつうのロケット</div>
+      <div class="panel-score">⭐ ごうけい <span id="panelTotalScore">0</span>てん</div>
+      <div class="panel-next" id="panelNext"></div>
+      <div class="star-bar-track"><div class="star-bar-fill" id="starBarFill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="sub-title">コースを　えらんでね！</div>
+  <div class="course-grid">
+    <button class="course-btn cc" onclick="selectCourse('count')">
+      <span class="icon">🍎</span><span class="name">かずを　かぞえる</span><span class="desc">1〜20のかず</span>
+    </button>
+    <button class="course-btn ca" onclick="selectCourse('add')">
+      <span class="icon">➕</span><span class="name">たしざん</span><span class="desc">10〜100まで</span>
+    </button>
+    <button class="course-btn cs" onclick="selectCourse('sub')">
+      <span class="icon">➖</span><span class="name">ひきざん</span><span class="desc">10〜100まで</span>
+    </button>
+    <button class="course-btn cm" onclick="selectCourse('mul')">
+      <span class="icon">✖️</span><span class="name">かけざん</span><span class="desc">九九〜大きい数</span>
+    </button>
+    <button class="course-btn cd" onclick="selectCourse('div')">
+      <span class="icon">➗</span><span class="name">わりざん</span><span class="desc">九九〜大きい数</span>
+    </button>
+    <button class="course-btn cx" onclick="selectCourse('mix')">
+      <span class="icon">🌈</span><span class="name">まぜまぜ</span><span class="desc">ぜんぶまじり</span>
+    </button>
+  </div>
+</div>
+
+<!-- レベル選択 -->
+<div class="screen" id="scrLevel">
+  <button class="back-btn" onclick="showScreen('scrCourse')">← もどる</button>
+  <div class="course-header" id="courseHeader"></div>
+  <div class="level-grid" id="levelGrid"></div>
+</div>
+
+<!-- ゲーム -->
+<div class="screen" id="scrGame">
+  <div class="game-header">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="game-rocket-badge" id="gameRocketBadge">🚀</div>
+      <div class="game-title">かずロケット</div>
+    </div>
+    <div class="level-badge" id="levelBadge">Lv1</div>
+  </div>
+  <div class="score-bar">
+    <div class="score-pill">⭐ <span id="scoreVal">0</span></div>
+    <div class="score-pill" id="livesPill">❤️❤️❤️</div>
+    <div class="score-pill">🔥 <span id="streakVal">0</span>れんぞく</div>
+  </div>
+  <div class="card">
+    <div class="question-text"  id="questionText"></div>
+    <div class="emojis-display" id="emojisDisplay"></div>
+    <div class="formula-row"    id="formulaRow" style="display:none"></div>
+  </div>
+  <div class="choices" id="choices"></div>
+  <div class="rocket-area">
+    <div class="rocket-game" id="rocket">🚀</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+  <div class="bottom-btns">
+    <button class="menu-btn" onclick="goToMenu()">📋 メニューへ</button>
+    <button class="sound-btn on" id="btnSound" onclick="toggleSound()">🔊 おとあり</button>
+  </div>
+</div>
+
+<div class="feedback" id="feedback"></div>
+
+<!-- レベルアップ -->
+<div class="overlay" id="ovLevelUp">
+  <div class="overlay-box ov-orange">
+    <div class="overlay-title">🎉 レベルアップ！</div>
+    <div class="overlay-sub" id="levelupSub"></div>
+    <button class="overlay-btn ob-orange" onclick="dismissLevelUp()">つぎへ ▶</button>
+    <button class="overlay-btn ob-orange" onclick="goToMenu()">メニューへ</button>
+  </div>
+</div>
+
+<!-- コースクリア -->
+<div class="overlay" id="ovClear">
+  <div class="overlay-box ov-purple">
+    <div class="overlay-title">🏆 コースクリア！</div>
+    <div class="overlay-sub" id="clearSub"></div>
+    <button class="overlay-btn ob-purple" onclick="goToMenu()">メニューへ ▶</button>
+  </div>
+</div>
+
+<!-- ロケット解放！ -->
+<div class="overlay" id="ovUnlock">
+  <div class="overlay-box ov-gold">
+    <div class="overlay-title">🎊 あたらしい<br>ロケット！</div>
+    <div class="overlay-rocket-big" id="unlockRocketEmoji">🛸</div>
+    <div class="overlay-sub" id="unlockSub"></div>
+    <button class="overlay-btn ob-gold" onclick="dismissUnlock()">やった！</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ============================================================
+//  ロケット定義（解放に必要な累計スコア）
+// ============================================================
+const ROCKETS = [
+  { emoji:'🚀', name:'ふつうのロケット',   need:0   },
+  { emoji:'🛸', name:'UFOロケット',        need:50  },
+  { emoji:'🌙', name:'つきロケット',        need:120 },
+  { emoji:'⭐', name:'ほしロケット',        need:220 },
+  { emoji:'☄️', name:'すいせいロケット',    need:350 },
+  { emoji:'🪐', name:'わくせいロケット',    need:500 },
+  { emoji:'🌈', name:'にじロケット',        need:700 },
+  { emoji:'🌟', name:'きんのロケット',      need:999 },
+];
+
+// ============================================================
+//  LocalStorage
+// ============================================================
+const LS_KEY = 'kazuRocket_v1';
+
+function loadSave() {
+  try {
+    const d = JSON.parse(localStorage.getItem(LS_KEY));
+    if (d && typeof d.totalScore === 'number') return d;
+  } catch(e) {}
+  return { totalScore: 0 };
+}
+
+function writeSave(data) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+let saveData = loadSave();
+
+function currentRocketIdx() {
+  let idx = 0;
+  ROCKETS.forEach((r, i) => { if (saveData.totalScore >= r.need) idx = i; });
+  return idx;
+}
+
+function nextRocketIdx() {
+  const ci = currentRocketIdx();
+  return ci < ROCKETS.length - 1 ? ci + 1 : null;
+}
+
+function currentRocket() { return ROCKETS[currentRocketIdx()]; }
+
+// ============================================================
+//  パネル更新（コース選択画面）
+// ============================================================
+function updatePanel() {
+  const r   = currentRocket();
+  const nxi = nextRocketIdx();
+  document.getElementById('panelRocket').textContent    = r.emoji;
+  document.getElementById('panelName').textContent      = r.name;
+  document.getElementById('panelTotalScore').textContent = saveData.totalScore;
+  document.getElementById('gameRocketBadge').textContent = r.emoji;
+  document.getElementById('rocket').textContent          = r.emoji;
+
+  if (nxi !== null) {
+    const next = ROCKETS[nxi];
+    const prev = ROCKETS[currentRocketIdx()];
+    const span = next.need - prev.need;
+    const done = saveData.totalScore - prev.need;
+    const pct  = Math.min(100, Math.round(done / span * 100));
+    document.getElementById('panelNext').textContent =
+      `つぎ: ${next.emoji} ${next.name}（あと ${next.need - saveData.totalScore} ⭐）`;
+    document.getElementById('starBarFill').style.width = pct + '%';
+  } else {
+    document.getElementById('panelNext').textContent = '🌟 ぜんぶ　かいほうした！';
+    document.getElementById('starBarFill').style.width = '100%';
+  }
+}
+
+// ============================================================
+//  定数
+// ============================================================
+const EMOJIS = ['🍎','🍊','🍋','🍇','🍓','🌟','🐱','🐶','🦊','🐸','🚂','✈️','🎈','🏀','🌸','🍕','🦋','🌈'];
+
+const COURSES = {
+  count: { icon:'🍎', name:'かずを　かぞえる', levels:[
+    {label:'Lv1',hint:'1〜5',  type:'count',max:5},
+    {label:'Lv2',hint:'1〜10', type:'count',max:10},
+    {label:'Lv3',hint:'1〜15', type:'count',max:15},
+    {label:'Lv4',hint:'1〜20', type:'count',max:20},
+  ]},
+  add: { icon:'➕', name:'たしざん', levels:[
+    {label:'Lv1',hint:'〜5',   type:'add',max:5},
+    {label:'Lv2',hint:'〜10',  type:'add',max:10},
+    {label:'Lv3',hint:'〜20',  type:'add',max:20},
+    {label:'Lv4',hint:'〜50',  type:'add',max:50},
+    {label:'Lv5',hint:'〜100', type:'add',max:100},
+  ]},
+  sub: { icon:'➖', name:'ひきざん', levels:[
+    {label:'Lv1',hint:'〜5',   type:'sub',max:5},
+    {label:'Lv2',hint:'〜10',  type:'sub',max:10},
+    {label:'Lv3',hint:'〜20',  type:'sub',max:20},
+    {label:'Lv4',hint:'〜50',  type:'sub',max:50},
+    {label:'Lv5',hint:'〜100', type:'sub',max:100},
+  ]},
+  mul: { icon:'✖️', name:'かけざん', levels:[
+    {label:'Lv1',hint:'2の段',    type:'mul',tables:[2]},
+    {label:'Lv2',hint:'3・4の段', type:'mul',tables:[3,4]},
+    {label:'Lv3',hint:'5・6の段', type:'mul',tables:[5,6]},
+    {label:'Lv4',hint:'7・8の段', type:'mul',tables:[7,8]},
+    {label:'Lv5',hint:'9の段',    type:'mul',tables:[9]},
+    {label:'Lv6',hint:'2〜9全部', type:'mul',tables:[2,3,4,5,6,7,8,9]},
+    {label:'Lv7',hint:'大きい数', type:'mul_big',maxA:12,maxB:12},
+  ]},
+  div: { icon:'➗', name:'わりざん', levels:[
+    {label:'Lv1',hint:'÷2',       type:'div',tables:[2]},
+    {label:'Lv2',hint:'÷3・4',    type:'div',tables:[3,4]},
+    {label:'Lv3',hint:'÷5・6',    type:'div',tables:[5,6]},
+    {label:'Lv4',hint:'÷7・8',    type:'div',tables:[7,8]},
+    {label:'Lv5',hint:'÷9',       type:'div',tables:[9]},
+    {label:'Lv6',hint:'÷2〜9全部',type:'div',tables:[2,3,4,5,6,7,8,9]},
+  ]},
+  mix: { icon:'🌈', name:'まぜまぜ', levels:[
+    {label:'Lv1',hint:'＋−10以内', type:'mix_as',max:10},
+    {label:'Lv2',hint:'＋−20以内', type:'mix_as',max:20},
+    {label:'Lv3',hint:'✖️÷九九',   type:'mix_md',tables:[2,3,4,5]},
+    {label:'Lv4',hint:'ぜんぶ',    type:'mix_all',max:20,tables:[2,3,4,5,6,7,8,9]},
+  ]},
+};
+
+// ============================================================
+//  状態
+// ============================================================
+let currentCourse = null;
+let currentLvIdx  = 0;
+let score = 0, lives = 3, streak = 0, correctInLv = 0;
+const NEED = 5;
+let correctAns = 0, locked = false;
+let pendingUnlock = null; // 解放したロケット
+
+// ============================================================
+//  画面切替
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goToMenu() {
+  stopBGM();
+  document.getElementById('ovLevelUp').classList.remove('show');
+  document.getElementById('ovClear').classList.remove('show');
+  document.getElementById('ovUnlock').classList.remove('show');
+  updatePanel();
+  showScreen('scrCourse');
+}
+
+// ============================================================
+//  コース選択
+// ============================================================
+function selectCourse(key) {
+  currentCourse = key;
+  const c = COURSES[key];
+  document.getElementById('courseHeader').innerHTML =
+    `<div class="hicon">${c.icon}</div><div class="hinfo"><h2>${c.name}</h2><p>レベルを　えらんでね！</p></div>`;
+  const grid = document.getElementById('levelGrid');
+  grid.innerHTML = '';
+  c.levels.forEach((lv, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'level-btn';
+    btn.innerHTML = `<span class="lv-num">${lv.label}</span><span class="lv-hint">${lv.hint}</span>`;
+    btn.addEventListener('click', () => startGame(i));
+    grid.appendChild(btn);
+  });
+  showScreen('scrLevel');
+}
+
+// ============================================================
+//  ゲーム開始
+// ============================================================
+function startGame(idx) {
+  currentLvIdx = idx;
+  score = 0; lives = 3; streak = 0; correctInLv = 0; locked = false;
+  pendingUnlock = null;
+  document.getElementById('progressFill').style.width = '0%';
+  // 現在のロケットを反映
+  const rEmoji = currentRocket().emoji;
+  document.getElementById('rocket').textContent          = rEmoji;
+  document.getElementById('gameRocketBadge').textContent = rEmoji;
+  updateUI();
+  showScreen('scrGame');
+  initAudio();
+  startBGM();
+  nextQ();
+}
+
+// ============================================================
+//  問題生成
+// ============================================================
+function ri(a,b) { return Math.floor(Math.random()*(b-a+1))+a; }
+function pick(arr) { return arr[ri(0,arr.length-1)]; }
+
+function makeQuestion() {
+  const cfg = COURSES[currentCourse].levels[currentLvIdx];
+  let type = cfg.type;
+  if (type==='mix_as')  type = Math.random()<.5?'add':'sub';
+  if (type==='mix_md')  type = Math.random()<.5?'mul':'div';
+  if (type==='mix_all') type = pick(['add','sub','mul','div']);
+
+  const emoji  = pick(EMOJIS);
+  const emojiB = EMOJIS.filter(x=>x!==emoji)[ri(0,EMOJIS.length-2)];
+  const eqRow  = document.getElementById('formulaRow');
+  const eDiv   = document.getElementById('emojisDisplay');
+  eqRow.style.display='none'; eDiv.style.display='block'; eDiv.textContent='';
+
+  if (type==='count') {
+    const n=ri(1,cfg.max); correctAns=n;
+    document.getElementById('questionText').textContent=`${emoji} なんこ　あるかな？`;
+    eDiv.textContent=emoji.repeat(n); return;
+  }
+  if (type==='add') {
+    const mx=cfg.max||20; let a,b;
+    do{a=ri(1,mx-1);b=ri(1,mx-1);}while(a+b>mx);
+    correctAns=a+b;
+    if(mx<=10){
+      document.getElementById('questionText').textContent='あわせて　なんこ？';
+      eDiv.textContent=emoji.repeat(a)+'  '+emojiB.repeat(b);
+    }else{
+      document.getElementById('questionText').textContent='こたえは？';
+      eDiv.style.display='none'; eqRow.style.display='flex';
+      eqRow.innerHTML=`<span>${a}</span><span>＋</span><span>${b}</span><span>＝</span><div class="question-mark">？</div>`;
+    }
+    return;
+  }
+  if (type==='sub') {
+    const mx=cfg.max||10; const a=ri(2,mx); const b=ri(1,a-1); correctAns=a-b;
+    document.getElementById('questionText').textContent='こたえは？';
+    eDiv.style.display='none'; eqRow.style.display='flex';
+    eqRow.innerHTML=`<span>${a}</span><span>－</span><span>${b}</span><span>＝</span><div class="question-mark">？</div>`;
+    return;
+  }
+  if (type==='mul') {
+    const a=pick(cfg.tables||[2,3,4,5]); const b=ri(1,9); correctAns=a*b;
+    document.getElementById('questionText').textContent='こたえは？';
+    eDiv.style.display='none'; eqRow.style.display='flex';
+    eqRow.innerHTML=`<span>${a}</span><span>×</span><span>${b}</span><span>＝</span><div class="question-mark">？</div>`;
+    return;
+  }
+  if (type==='mul_big') {
+    const a=ri(2,cfg.maxA||12); const b=ri(2,cfg.maxB||12); correctAns=a*b;
+    document.getElementById('questionText').textContent='こたえは？';
+    eDiv.style.display='none'; eqRow.style.display='flex';
+    eqRow.innerHTML=`<span>${a}</span><span>×</span><span>${b}</span><span>＝</span><div class="question-mark">？</div>`;
+    return;
+  }
+  if (type==='div') {
+    const d=pick(cfg.tables||[2,3,4,5]); const q=ri(1,9); correctAns=q;
+    document.getElementById('questionText').textContent='こたえは？';
+    eDiv.style.display='none'; eqRow.style.display='flex';
+    eqRow.innerHTML=`<span>${d*q}</span><span>÷</span><span>${d}</span><span>＝</span><div class="question-mark">？</div>`;
+    return;
+  }
+}
+
+function makeChoices() {
+  const container=document.getElementById('choices'); container.innerHTML='';
+  const opts=new Set([correctAns]); let tries=0;
+  while(opts.size<4&&tries<300){
+    tries++; const sp=correctAns>50?15:correctAns>20?8:4;
+    const c=correctAns+ri(-sp,sp); if(c>0&&c!==correctAns) opts.add(c);
+  }
+  let ex=correctAns+1; while(opts.size<4){if(!opts.has(ex))opts.add(ex);ex++;}
+  [...opts].sort(()=>Math.random()-.5).forEach(val=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn'; btn.textContent=val;
+    btn.addEventListener('click',()=>onAnswer(btn,val));
+    container.appendChild(btn);
+  });
+}
+
+function nextQ() { locked=false; makeQuestion(); makeChoices(); }
+
+// ============================================================
+//  回答処理
+// ============================================================
+function onAnswer(btn, val) {
+  if (locked) return;
+  locked = true;
+
+  if (val === correctAns) {
+    btn.classList.add('correct');
+    streak++; score += 10+(streak>=3?5:0); correctInLv++;
+    showFeedback('⭕','#69f0ae');
+    playSE('correct');
+
+    // 累計スコア加算 & ロケット解放チェック
+    const prevIdx = currentRocketIdx();
+    saveData.totalScore += 10+(streak>=3?5:0);
+    writeSave(saveData);
+    const newIdx = currentRocketIdx();
+    if (newIdx > prevIdx) {
+      pendingUnlock = ROCKETS[newIdx];
+      // ゲーム内のロケット絵文字も即更新
+      document.getElementById('rocket').textContent = pendingUnlock.emoji;
+      document.getElementById('gameRocketBadge').textContent = pendingUnlock.emoji;
+    }
+
+    updateRocket();
+    const levels = COURSES[currentCourse].levels;
+    if (correctInLv >= NEED) {
+      if (currentLvIdx >= levels.length-1) setTimeout(showClear, 700);
+      else setTimeout(doLevelUp, 700);
+    } else {
+      setTimeout(nextQ, 900);
+    }
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.choice-btn').forEach(b=>{
+      if(+b.textContent===correctAns) b.classList.add('correct');
+    });
+    streak=0; lives--;
+    showFeedback('❌','#ff5252');
+    playSE('wrong');
+    if(lives<=0) setTimeout(()=>{lives=3;updateUI();nextQ();},1100);
+    else setTimeout(nextQ,1100);
+  }
+  updateUI();
+}
+
+function updateRocket() {
+  const prog=(correctInLv/NEED)*100;
+  document.getElementById('progressFill').style.width=Math.min(prog,100)+'%';
+  document.getElementById('rocket').style.left=(10+Math.min(prog,100)*.7)+'%';
+}
+
+function updateUI() {
+  document.getElementById('scoreVal').textContent=score;
+  document.getElementById('livesPill').textContent='❤️'.repeat(Math.max(0,lives));
+  document.getElementById('streakVal').textContent=streak;
+  const lv=COURSES[currentCourse]?.levels[currentLvIdx];
+  document.getElementById('levelBadge').textContent=lv?lv.label:'Lv1';
+}
+
+function showFeedback(text,color) {
+  const f=document.getElementById('feedback');
+  f.textContent=text; f.style.color=color;
+  f.classList.remove('show'); void f.offsetWidth; f.classList.add('show');
+  f.addEventListener('animationend',()=>f.classList.remove('show'),{once:true});
+}
+
+// ============================================================
+//  レベルアップ / クリア / ロケット解放
+// ============================================================
+function doLevelUp() {
+  playSE('levelup');
+  const next=COURSES[currentCourse].levels[currentLvIdx+1];
+  document.getElementById('levelupSub').textContent=`${next.label}（${next.hint}）になったよ！🎊`;
+  launchRocket(); confetti();
+  document.getElementById('ovLevelUp').classList.add('show');
+}
+
+function dismissLevelUp() {
+  document.getElementById('ovLevelUp').classList.remove('show');
+  currentLvIdx++; correctInLv=0; locked=false;
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('rocket').style.left='10%';
+  updateUI();
+  // ロケット解放が pending なら先に見せる
+  if (pendingUnlock) { setTimeout(showUnlock, 200); }
+  else nextQ();
+}
+
+function showClear() {
+  playSE('clear');
+  document.getElementById('clearSub').textContent=
+    `「${COURSES[currentCourse].name}」コースを　ぜんぶ　クリアしたよ！🏆`;
+  launchRocket(); confetti();
+  document.getElementById('ovClear').classList.add('show');
+  // クリア後にロケット解放があれば重ねて表示
+  if (pendingUnlock) setTimeout(showUnlock, 1200);
+}
+
+function showUnlock() {
+  if (!pendingUnlock) return;
+  playSE('unlock');
+  document.getElementById('unlockRocketEmoji').textContent = pendingUnlock.emoji;
+  document.getElementById('unlockSub').textContent =
+    `「${pendingUnlock.name}」を　てにいれた！\nこれからこのロケットで　とびたとう！`;
+  confetti(); confetti();
+  document.getElementById('ovUnlock').classList.add('show');
+}
+
+function dismissUnlock() {
+  document.getElementById('ovUnlock').classList.remove('show');
+  pendingUnlock = null;
+  updatePanel();
+  nextQ();
+}
+
+function launchRocket() {
+  const r=document.getElementById('rocket');
+  r.classList.add('launch');
+  setTimeout(()=>{r.style.left='10%';r.classList.remove('launch');document.getElementById('progressFill').style.width='0%';},850);
+}
+
+function confetti() {
+  const colors=['#ffd740','#ff6f00','#69f0ae','#40c4ff','#ff80ab','#ea80fc'];
+  for(let i=0;i<50;i++){
+    const el=document.createElement('div'); el.className='confetti-piece';
+    el.style.cssText=`left:${Math.random()*100}%;top:-20px;background:${colors[i%colors.length]};--dur:${1+Math.random()*1.2}s;transform:rotate(${Math.random()*360}deg);animation-delay:${Math.random()*.4}s`;
+    document.body.appendChild(el);
+    el.addEventListener('animationend',()=>el.remove());
+  }
+}
+
+// ============================================================
+//  星
+// ============================================================
+function makeStars() {
+  const c=document.getElementById('stars');
+  for(let i=0;i<60;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*3+1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${1.5+Math.random()*2.5}s`;
+    c.appendChild(s);
+  }
+}
+
+// ============================================================
+//  Audio Engine
+// ============================================================
+let actx=null, seEnabled=true, bgmEnabled=true;
+let bgmSchedulerId=null, bgmMasterGain=null;
+let bgmNextTime=0, bgmMelodyPos=0, bgmBassTime=0;
+
+const BGM_MELODY=[
+  [523,.18],[659,.18],[784,.18],[880,.36],
+  [784,.18],[659,.18],[523,.36],
+  [392,.18],[523,.18],[659,.18],[784,.36],
+  [659,.18],[523,.18],[392,.36],
+  [523,.18],[784,.18],[1047,.36],[880,.18],
+  [784,.18],[659,.36],[523,.72],
+];
+const BGM_BASS=[130,146,164,174];
+
+function initAudio() {
+  if(actx){if(actx.state==='suspended')actx.resume();return;}
+  actx=new(window.AudioContext||window.webkitAudioContext)();
+}
+function getCtx(){ initAudio(); return actx; }
+
+function playSE(kind) {
+  if(!seEnabled) return;
+  const ctx=getCtx(); const now=ctx.currentTime;
+  if(kind==='correct'){
+    [523,659,784,1047].forEach((f,i)=>{
+      const t=now+i*.08; const o=ctx.createOscillator(); const g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination); o.type='sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.25,t+.02);
+      g.gain.exponentialRampToValueAtTime(.001,t+.22); o.start(t);o.stop(t+.22);
+    });
+    const o2=ctx.createOscillator();const g2=ctx.createGain();
+    o2.connect(g2);g2.connect(ctx.destination); o2.type='triangle';o2.frequency.value=2093;
+    const t2=now+.28; g2.gain.setValueAtTime(.15,t2);
+    g2.gain.exponentialRampToValueAtTime(.001,t2+.3); o2.start(t2);o2.stop(t2+.3);
+    return;
+  }
+  if(kind==='wrong'){
+    [300,220].forEach((f,i)=>{
+      const t=now+i*.1; const o=ctx.createOscillator();const g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination); o.type='sawtooth';
+      o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*.7,t+.2);
+      g.gain.setValueAtTime(.18,t); g.gain.exponentialRampToValueAtTime(.001,t+.25);
+      o.start(t);o.stop(t+.25);
+    });
+    return;
+  }
+  if(kind==='levelup'){
+    [392,523,659,784,1047].forEach((f,i)=>{
+      const t=now+i*.1; const o=ctx.createOscillator();const g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination); o.type='square';o.frequency.value=f;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.18,t+.02);
+      g.gain.exponentialRampToValueAtTime(.001,t+.28); o.start(t);o.stop(t+.3);
+    });
+    return;
+  }
+  if(kind==='clear'){
+    const mel=[523,659,784,1047,784,1047,1319];
+    const durs=[.12,.12,.12,.2,.1,.1,.4]; let t=now;
+    mel.forEach((f,i)=>{
+      const o=ctx.createOscillator();const g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination); o.type='triangle';o.frequency.value=f;
+      g.gain.setValueAtTime(.2,t); g.gain.exponentialRampToValueAtTime(.001,t+durs[i]);
+      o.start(t);o.stop(t+durs[i]); t+=durs[i]*.9;
+    });
+    return;
+  }
+  if(kind==='unlock'){
+    // キラキラ上昇スパーク
+    [659,784,988,1319,1568,2093].forEach((f,i)=>{
+      const t=now+i*.07; const o=ctx.createOscillator();const g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination); o.type='triangle';o.frequency.value=f;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.22,t+.02);
+      g.gain.exponentialRampToValueAtTime(.001,t+.25); o.start(t);o.stop(t+.25);
+    });
+    return;
+  }
+}
+
+function scheduleBGM() {
+  if(!bgmEnabled||!bgmMasterGain) return;
+  const ctx=getCtx(); const horizon=ctx.currentTime+.8;
+  while(bgmNextTime<horizon){
+    const[freq,dur]=BGM_MELODY[bgmMelodyPos%BGM_MELODY.length];
+    const o=ctx.createOscillator();const g=ctx.createGain();
+    o.connect(g);g.connect(bgmMasterGain); o.type='triangle';o.frequency.value=freq;
+    g.gain.setValueAtTime(0,bgmNextTime); g.gain.linearRampToValueAtTime(.7,bgmNextTime+.02);
+    g.gain.setValueAtTime(.7,bgmNextTime+dur*.7); g.gain.linearRampToValueAtTime(0,bgmNextTime+dur*.95);
+    o.start(bgmNextTime);o.stop(bgmNextTime+dur); bgmNextTime+=dur; bgmMelodyPos++;
+  }
+  const beatLen=.54;
+  while(bgmBassTime<horizon){
+    const root=BGM_BASS[Math.floor(bgmMelodyPos/4)%BGM_BASS.length];
+    const o=ctx.createOscillator();const g=ctx.createGain();
+    o.connect(g);g.connect(bgmMasterGain); o.type='sine';o.frequency.value=root;
+    g.gain.setValueAtTime(.5,bgmBassTime); g.gain.exponentialRampToValueAtTime(.001,bgmBassTime+beatLen*.8);
+    o.start(bgmBassTime);o.stop(bgmBassTime+beatLen); bgmBassTime+=beatLen;
+  }
+}
+
+function startBGM() {
+  if(!bgmEnabled||bgmSchedulerId) return;
+  const ctx=getCtx();
+  bgmMasterGain=ctx.createGain(); bgmMasterGain.gain.value=.09;
+  bgmMasterGain.connect(ctx.destination);
+  bgmMelodyPos=0; bgmNextTime=ctx.currentTime+.05; bgmBassTime=ctx.currentTime+.05;
+  scheduleBGM(); bgmSchedulerId=setInterval(scheduleBGM,350);
+}
+
+function stopBGM() {
+  if(bgmSchedulerId){clearInterval(bgmSchedulerId);bgmSchedulerId=null;}
+  if(bgmMasterGain){
+    try{bgmMasterGain.gain.setTargetAtTime(0,getCtx().currentTime,.15);}catch(e){}
+    bgmMasterGain=null;
+  }
+}
+
+function toggleSound() {
+  seEnabled=bgmEnabled=!seEnabled;
+  const btn=document.getElementById('btnSound');
+  btn.classList.toggle('on',seEnabled); btn.classList.toggle('off',!seEnabled);
+  btn.textContent=seEnabled?'🔊 おとあり':'🔇 おとなし';
+  if(bgmEnabled){initAudio();startBGM();}else stopBGM();
+}
+
+// ============================================================
+//  起動
+// ============================================================
+makeStars();
+updatePanel();
+</script>
+</body>
+</html>
