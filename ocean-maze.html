@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌊 海の迷路 🌊</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
+
+  :root {
+    --deep: #020c1b;
+    --ocean1: #0a1628;
+    --ocean2: #0d2137;
+    --mid: #0e3a5c;
+    --surface: #1a6fa8;
+    --foam: #4db8e8;
+    --bright: #7ee8ff;
+    --coral: #ff6b6b;
+    --coral2: #ff9e6b;
+    --gold: #ffd166;
+    --sand: #f4e4c1;
+    --trail: rgba(100, 220, 255, 0.35);
+    --trail-border: rgba(100, 220, 255, 0.6);
+    --wall: #042a45;
+    --wall-top: #0a3d5e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--deep);
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-x: hidden;
+    position: relative;
+    padding-bottom: 30px;
+  }
+
+  /* 海の背景アニメーション */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(13,93,155,0.3) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(0,120,160,0.2) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(5,60,100,0.3) 0%, transparent 50%),
+      linear-gradient(180deg, #020c1b 0%, #041829 40%, #062035 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* 泡 */
+  .bubble {
+    position: fixed;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.6), rgba(100,220,255,0.1));
+    border: 1px solid rgba(150,230,255,0.3);
+    animation: rise linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  @keyframes rise {
+    0%   { transform: translateY(100vh) translateX(0) scale(1); opacity: 0; }
+    10%  { opacity: 0.7; }
+    90%  { opacity: 0.3; }
+    100% { transform: translateY(-100px) translateX(30px) scale(0.8); opacity: 0; }
+  }
+
+  /* 光の揺らぎ */
+  .caustic {
+    position: fixed;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(100,200,255,0.06) 0%, transparent 70%);
+    animation: caustic-move 8s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  @keyframes caustic-move {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33% { transform: translate(60px, -30px) scale(1.2); }
+    66% { transform: translate(-40px, 20px) scale(0.9); }
+  }
+
+  h1 {
+    font-family: 'Kaisei Decol', serif;
+    font-size: clamp(1.6rem, 4vw, 2.8rem);
+    color: var(--bright);
+    text-align: center;
+    margin: 20px 0 6px;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 20px rgba(100,220,255,0.8), 0 0 40px rgba(50,150,220,0.5);
+    position: relative;
+    z-index: 10;
+  }
+
+  .subtitle {
+    color: rgba(150,210,240,0.7);
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* レベル選択 */
+  .level-select {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 10;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .level-btn {
+    padding: 8px 18px;
+    border: 2px solid rgba(100,200,255,0.4);
+    border-radius: 30px;
+    background: rgba(10,30,60,0.6);
+    color: var(--foam);
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    backdrop-filter: blur(8px);
+  }
+
+  .level-btn:hover {
+    background: rgba(20,80,140,0.7);
+    border-color: var(--foam);
+    box-shadow: 0 0 15px rgba(100,200,255,0.4);
+    transform: translateY(-2px);
+  }
+
+  .level-btn.active {
+    background: linear-gradient(135deg, #0d4f7c, #1a7aad);
+    border-color: var(--bright);
+    color: var(--bright);
+    box-shadow: 0 0 20px rgba(100,220,255,0.5);
+  }
+
+  /* 情報バー */
+  .info-bar {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 10;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .info-item {
+    background: rgba(10,30,60,0.7);
+    border: 1px solid rgba(100,200,255,0.3);
+    border-radius: 20px;
+    padding: 6px 16px;
+    color: var(--foam);
+    font-size: 0.9rem;
+    font-weight: 700;
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .info-item span.val {
+    color: var(--gold);
+    font-size: 1.1rem;
+  }
+
+  /* 操作ボタン */
+  .ctrl-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 10;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .ctrl-btn {
+    padding: 7px 16px;
+    border: 2px solid rgba(100,200,255,0.35);
+    border-radius: 25px;
+    background: rgba(10,30,60,0.6);
+    color: var(--foam);
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(8px);
+  }
+
+  .ctrl-btn:hover {
+    background: rgba(20,70,130,0.7);
+    border-color: var(--foam);
+    transform: translateY(-1px);
+    box-shadow: 0 0 12px rgba(100,200,255,0.3);
+  }
+
+  .ctrl-btn.music-btn.playing {
+    border-color: var(--gold);
+    color: var(--gold);
+    box-shadow: 0 0 12px rgba(255,209,102,0.4);
+  }
+
+  /* 迷路キャンバス */
+  .maze-container {
+    position: relative;
+    z-index: 10;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 2px rgba(100,200,255,0.25),
+      0 0 30px rgba(0,100,180,0.4),
+      0 0 60px rgba(0,60,120,0.3);
+  }
+
+  canvas {
+    display: block;
+  }
+
+  /* 矢印キー */
+  .arrow-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 52px);
+    grid-template-rows: repeat(3, 52px);
+    gap: 5px;
+    margin-top: 16px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .arrow-btn {
+    width: 52px; height: 52px;
+    border: 2px solid rgba(100,200,255,0.4);
+    border-radius: 12px;
+    background: rgba(10,30,60,0.65);
+    color: var(--bright);
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    transition: all 0.15s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .arrow-btn:active, .arrow-btn.pressed {
+    background: rgba(20,80,150,0.8);
+    border-color: var(--bright);
+    box-shadow: 0 0 15px rgba(100,220,255,0.5);
+    transform: scale(0.92);
+  }
+
+  .arrow-btn.empty { visibility: hidden; }
+
+  /* クリア画面 */
+  .clear-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(2,12,27,0.88);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+    backdrop-filter: blur(6px);
+  }
+
+  .clear-overlay.show {
+    display: flex;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .clear-title {
+    font-family: 'Kaisei Decol', serif;
+    font-size: clamp(2rem, 8vw, 3.5rem);
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(255,209,102,0.8), 0 0 60px rgba(255,150,50,0.4);
+    animation: shine 1.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes shine {
+    from { text-shadow: 0 0 20px rgba(255,209,102,0.6); }
+    to   { text-shadow: 0 0 40px rgba(255,209,102,1), 0 0 80px rgba(255,150,50,0.6); }
+  }
+
+  .clear-sub {
+    color: var(--foam);
+    font-size: 1.1rem;
+  }
+
+  .clear-steps {
+    color: var(--bright);
+    font-size: 1.4rem;
+    font-weight: 800;
+  }
+
+  .clear-btn {
+    margin-top: 10px;
+    padding: 12px 32px;
+    border: 2px solid var(--gold);
+    border-radius: 30px;
+    background: rgba(10,30,60,0.8);
+    color: var(--gold);
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.1em;
+  }
+
+  .clear-btn:hover {
+    background: rgba(255,209,102,0.15);
+    box-shadow: 0 0 20px rgba(255,209,102,0.4);
+    transform: scale(1.05);
+  }
+
+  .fish-emoji {
+    font-size: 3rem;
+    animation: swim 2s ease-in-out infinite alternate;
+    display: inline-block;
+  }
+  @keyframes swim {
+    from { transform: translateX(-10px); }
+    to   { transform: translateX(10px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="caustic" style="top:10%;left:20%"></div>
+<div class="caustic" style="top:60%;left:70%;animation-delay:-3s"></div>
+
+<h1>🌊 海の迷路 🌊</h1>
+<p class="subtitle">深海を泳いで ゴールを目指そう！</p>
+
+<div class="level-select">
+  <button class="level-btn active" data-size="13" onclick="setLevel(this,13)">🐠 かんたん（13×13）</button>
+  <button class="level-btn" data-size="16" onclick="setLevel(this,16)">🐟 ふつう（16×16）</button>
+  <button class="level-btn" data-size="19" onclick="setLevel(this,19)">🦈 むずかしい（19×19）</button>
+</div>
+
+<div class="info-bar">
+  <div class="info-item">👟 歩いたマス：<span class="val" id="stepCount">0</span></div>
+  <div class="info-item">🎯 ゴールまで：<span class="val" id="remainInfo">-</span></div>
+</div>
+
+<div class="ctrl-bar">
+  <button class="ctrl-btn" onclick="newMaze()">🔄 新しい迷路</button>
+  <button class="ctrl-btn" onclick="toggleHint()">💡 ヒント</button>
+  <button class="ctrl-btn music-btn" id="musicBtn" onclick="toggleMusic()">🎵 BGM ON</button>
+</div>
+
+<div class="maze-container">
+  <canvas id="maze"></canvas>
+</div>
+
+<div class="arrow-pad">
+  <div class="arrow-btn empty"></div>
+  <button class="arrow-btn" id="btnUp"    onmousedown="move(0,-1)" ontouchstart="e=>{e.preventDefault();move(0,-1)}">▲</button>
+  <div class="arrow-btn empty"></div>
+  <button class="arrow-btn" id="btnLeft"  onmousedown="move(-1,0)" ontouchstart="e=>{e.preventDefault();move(-1,0)}">◀</button>
+  <div class="arrow-btn empty"></div>
+  <button class="arrow-btn" id="btnRight" onmousedown="move(1,0)"  ontouchstart="e=>{e.preventDefault();move(1,0)}">▶</button>
+  <div class="arrow-btn empty"></div>
+  <button class="arrow-btn" id="btnDown"  onmousedown="move(0,1)"  ontouchstart="e=>{e.preventDefault();move(0,1)}">▼</button>
+  <div class="arrow-btn empty"></div>
+</div>
+
+<div class="clear-overlay" id="clearOverlay">
+  <div class="fish-emoji">🐠</div>
+  <div class="clear-title">🎉 クリア！</div>
+  <div class="clear-sub">深海の謎を解き明かした！</div>
+  <div class="clear-steps" id="clearSteps"></div>
+  <button class="clear-btn" onclick="newMaze()">もう一度あそぶ</button>
+</div>
+
+<script>
+// ======== AudioContext BGM ========
+let audioCtx = null;
+let musicPlaying = false;
+let musicNodes = [];
+let musicScheduled = false;
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playOceanBGM() {
+  if (!audioCtx) return;
+  stopMusic();
+  musicPlaying = true;
+  scheduleMusicLoop();
+}
+
+function scheduleMusicLoop() {
+  if (!musicPlaying) return;
+  playOceanChunk(audioCtx.currentTime);
+}
+
+function playOceanChunk(startTime) {
+  if (!musicPlaying || !audioCtx) return;
+
+  const master = audioCtx.createGain();
+  master.gain.setValueAtTime(0.18, startTime);
+  master.connect(audioCtx.destination);
+
+  // 深海の雰囲気: ゆっくりした和音 + 波の揺らぎ
+  const chordDuration = 3.2;
+  // Dm7 / Am7 / Gmaj7 / Em7 風の穏やかな進行
+  const chords = [
+    [146.83, 174.61, 220.00, 261.63], // Dm7
+    [110.00, 146.83, 174.61, 220.00], // Am7
+    [98.00,  123.47, 146.83, 196.00], // Gm7
+    [130.81, 164.81, 196.00, 246.94], // Cm7
+  ];
+  const totalDuration = chords.length * chordDuration;
+
+  chords.forEach((chord, ci) => {
+    const t = startTime + ci * chordDuration;
+    chord.forEach((freq, fi) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      const detune = (fi % 2 === 0) ? 3 : -3;
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq / 2, t); // lower octave
+      osc.detune.setValueAtTime(detune, t);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.12, t + 0.3);
+      g.gain.setValueAtTime(0.10, t + chordDuration - 0.5);
+      g.gain.linearRampToValueAtTime(0, t + chordDuration);
+      osc.connect(g);
+      g.connect(master);
+      osc.start(t);
+      osc.stop(t + chordDuration);
+    });
+  });
+
+  // 波音（ノイズ）
+  const bufferSize = audioCtx.sampleRate * totalDuration;
+  const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.02;
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = noiseBuffer;
+  const noiseFilter = audioCtx.createBiquadFilter();
+  noiseFilter.type = 'lowpass';
+  noiseFilter.frequency.setValueAtTime(600, startTime);
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.setValueAtTime(0.08, startTime);
+  // ゆっくり揺らす
+  const lfo = audioCtx.createOscillator();
+  const lfoGain = audioCtx.createGain();
+  lfo.frequency.setValueAtTime(0.15, startTime);
+  lfoGain.gain.setValueAtTime(0.03, startTime);
+  lfo.connect(lfoGain);
+  lfoGain.connect(noiseGain.gain);
+  lfo.start(startTime);
+  lfo.stop(startTime + totalDuration);
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(master);
+  noise.start(startTime);
+  noise.stop(startTime + totalDuration);
+
+  // キラキラ音（高音の水音）
+  for (let i = 0; i < 6; i++) {
+    const t = startTime + Math.random() * totalDuration;
+    const sparkOsc = audioCtx.createOscillator();
+    const sparkGain = audioCtx.createGain();
+    sparkOsc.type = 'sine';
+    sparkOsc.frequency.setValueAtTime(800 + Math.random() * 800, t);
+    sparkGain.gain.setValueAtTime(0, t);
+    sparkGain.gain.linearRampToValueAtTime(0.04, t + 0.05);
+    sparkGain.gain.linearRampToValueAtTime(0, t + 0.3);
+    sparkOsc.connect(sparkGain);
+    sparkGain.connect(master);
+    sparkOsc.start(t);
+    sparkOsc.stop(t + 0.3);
+  }
+
+  // ループ
+  setTimeout(() => {
+    if (musicPlaying) scheduleMusicLoop();
+  }, totalDuration * 1000 - 200);
+}
+
+function stopMusic() {
+  musicPlaying = false;
+}
+
+function toggleMusic() {
+  const btn = document.getElementById('musicBtn');
+  if (!audioCtx) initAudio();
+  if (musicPlaying) {
+    stopMusic();
+    btn.textContent = '🎵 BGM ON';
+    btn.classList.remove('playing');
+  } else {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    playOceanBGM();
+    btn.textContent = '🔇 BGM OFF';
+    btn.classList.add('playing');
+  }
+}
+
+// ======== 迷路生成 ========
+let COLS = 13, ROWS = 13;
+let CELL = 30;
+const MAX_CANVAS = 520;
+
+let grid = [];
+let playerX = 0, playerY = 0;
+let steps = 0;
+let visited = [];
+let showHint = false;
+let solved = [];
+
+function setLevel(btn, size) {
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  COLS = size; ROWS = size;
+  newMaze();
+}
+
+function calcCellSize() {
+  const maxW = Math.min(window.innerWidth - 32, MAX_CANVAS);
+  CELL = Math.floor(maxW / COLS);
+  if (CELL < 20) CELL = 20;
+}
+
+function newMaze() {
+  calcCellSize();
+  document.getElementById('clearOverlay').classList.remove('show');
+  steps = 0;
+  playerX = 0; playerY = 0;
+  visited = Array.from({length: ROWS}, () => Array(COLS).fill(false));
+  visited[0][0] = true;
+  showHint = false;
+  solved = [];
+  generateMaze();
+  solveMaze();
+  updateInfo();
+  drawMaze();
+}
+
+// Wilson's algorithm or recursive backtracker
+function generateMaze() {
+  grid = Array.from({length: ROWS}, () =>
+    Array.from({length: COLS}, () => ({ r: true, b: true }))
+  );
+  const inMaze = Array.from({length: ROWS}, () => Array(COLS).fill(false));
+  inMaze[0][0] = true;
+  const stack = [[0, 0]];
+  const dirs = [[1,0],[0,1],[-1,0],[0,-1]];
+  while (stack.length) {
+    const [cx, cy] = stack[stack.length - 1];
+    const neighbors = [];
+    for (const [dx, dy] of dirs) {
+      const nx = cx + dx, ny = cy + dy;
+      if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && !inMaze[ny][nx]) {
+        neighbors.push([nx, ny, dx, dy]);
+      }
+    }
+    if (neighbors.length === 0) { stack.pop(); continue; }
+    const [nx, ny, dx, dy] = neighbors[Math.floor(Math.random() * neighbors.length)];
+    // carve wall
+    if (dx === 1) grid[cy][cx].r = false;
+    else if (dx === -1) grid[ny][nx].r = false;
+    else if (dy === 1) grid[cy][cx].b = false;
+    else if (dy === -1) grid[ny][nx].b = false;
+    inMaze[ny][nx] = true;
+    stack.push([nx, ny]);
+  }
+}
+
+// BFS to solve
+function solveMaze() {
+  const prev = Array.from({length: ROWS}, () => Array(COLS).fill(null));
+  const q = [[0, 0]];
+  prev[0][0] = [-1, -1];
+  while (q.length) {
+    const [cx, cy] = q.shift();
+    if (cx === COLS - 1 && cy === ROWS - 1) break;
+    // right
+    if (!grid[cy][cx].r && prev[cy][cx+1] === null) { prev[cy][cx+1]=[cx,cy]; q.push([cx+1,cy]); }
+    // down
+    if (!grid[cy][cx].b && prev[cy+1] && prev[cy+1][cx] === null) { prev[cy+1][cx]=[cx,cy]; q.push([cx,cy+1]); }
+    // left
+    if (cx > 0 && !grid[cy][cx-1].r && prev[cy][cx-1] === null) { prev[cy][cx-1]=[cx,cy]; q.push([cx-1,cy]); }
+    // up
+    if (cy > 0 && !grid[cy-1][cx].b && prev[cy-1] && prev[cy-1][cx] === null) { prev[cy-1][cx]=[cx,cy]; q.push([cx,cy-1]); }
+  }
+  solved = [];
+  let cx = COLS-1, cy = ROWS-1;
+  while (cx !== -1) {
+    solved.push([cx, cy]);
+    [cx, cy] = prev[cy][cx];
+  }
+}
+
+function move(dx, dy) {
+  const nx = playerX + dx, ny = playerY + dy;
+  if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) return;
+  // check wall
+  const cx = playerX, cy = playerY;
+  if (dx === 1  && grid[cy][cx].r) return;
+  if (dx === -1 && grid[ny][nx].r) return;
+  if (dy === 1  && grid[cy][cx].b) return;
+  if (dy === -1 && grid[ny][nx].b) return;
+  playerX = nx; playerY = ny;
+  if (!visited[ny][nx]) { visited[ny][nx] = true; }
+  steps++;
+  updateInfo();
+  drawMaze();
+  if (playerX === COLS - 1 && playerY === ROWS - 1) {
+    setTimeout(showClear, 300);
+  }
+}
+
+function updateInfo() {
+  document.getElementById('stepCount').textContent = steps;
+  // 残りはヒントルートの長さ
+  const solvedSet = new Set(solved.map(([x,y]) => `${x},${y}`));
+  let remaining = 0;
+  for (const [x,y] of solved) {
+    if (x === playerX && y === playerY) break;
+    remaining++;
+  }
+  // Approximate
+  document.getElementById('remainInfo').textContent = `約${remaining}マス`;
+}
+
+function toggleHint() {
+  showHint = !showHint;
+  drawMaze();
+}
+
+function showClear() {
+  document.getElementById('clearSteps').textContent = `${steps} マスで到達！`;
+  document.getElementById('clearOverlay').classList.add('show');
+}
+
+// ======== 描画 ========
+function drawMaze() {
+  const canvas = document.getElementById('maze');
+  const W = COLS * CELL, H = ROWS * CELL;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // 海の背景
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#041525');
+  bg.addColorStop(1, '#062035');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // グリッド（薄い海底感）
+  ctx.strokeStyle = 'rgba(30,80,120,0.3)';
+  ctx.lineWidth = 0.5;
+  for (let y = 0; y <= ROWS; y++) {
+    ctx.beginPath(); ctx.moveTo(0, y*CELL); ctx.lineTo(W, y*CELL); ctx.stroke();
+  }
+  for (let x = 0; x <= COLS; x++) {
+    ctx.beginPath(); ctx.moveTo(x*CELL, 0); ctx.lineTo(x*CELL, H); ctx.stroke();
+  }
+
+  // ヒント（正解ルート）
+  if (showHint) {
+    for (const [hx, hy] of solved) {
+      ctx.fillStyle = 'rgba(255,220,80,0.08)';
+      ctx.fillRect(hx*CELL+1, hy*CELL+1, CELL-2, CELL-2);
+    }
+  }
+
+  // 通った道（グロー）
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      if (visited[y][x]) {
+        const grad = ctx.createRadialGradient(
+          x*CELL + CELL/2, y*CELL + CELL/2, 0,
+          x*CELL + CELL/2, y*CELL + CELL/2, CELL*0.7
+        );
+        grad.addColorStop(0, 'rgba(80,200,255,0.28)');
+        grad.addColorStop(1, 'rgba(30,120,200,0.05)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(x*CELL, y*CELL, CELL, CELL);
+        // 枠のグロー
+        ctx.strokeStyle = 'rgba(100,220,255,0.18)';
+        ctx.lineWidth = 0.8;
+        ctx.strokeRect(x*CELL+1, y*CELL+1, CELL-2, CELL-2);
+      }
+    }
+  }
+
+  // スタート・ゴール
+  drawCell(ctx, 0, 0, 'rgba(100,255,150,0.25)', '🐬');
+  drawCell(ctx, COLS-1, ROWS-1, 'rgba(255,180,50,0.3)', '⭐');
+
+  // 壁
+  ctx.strokeStyle = '#0a3d5e';
+  ctx.lineWidth = 2.5;
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const cx = x * CELL, cy = y * CELL;
+      if (grid[y][x].r && x < COLS - 1) {
+        drawWall(ctx, cx + CELL, cy, cx + CELL, cy + CELL);
+      }
+      if (grid[y][x].b && y < ROWS - 1) {
+        drawWall(ctx, cx, cy + CELL, cx + CELL, cy + CELL);
+      }
+    }
+  }
+  // 外壁
+  ctx.strokeStyle = '#1a6fa8';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(0, 0, W, H);
+
+  // プレイヤー（魚）
+  const px = playerX * CELL + CELL / 2;
+  const py = playerY * CELL + CELL / 2;
+  const r = CELL * 0.32;
+  // グロー
+  const glow = ctx.createRadialGradient(px, py, 0, px, py, r * 2.5);
+  glow.addColorStop(0, 'rgba(100,220,255,0.5)');
+  glow.addColorStop(1, 'rgba(0,100,200,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(px, py, r * 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  // 本体
+  ctx.font = `${Math.floor(CELL * 0.6)}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🐠', px, py);
+}
+
+function drawWall(ctx, x1, y1, x2, y2) {
+  // 発光する壁
+  ctx.save();
+  ctx.shadowColor = 'rgba(30,120,200,0.5)';
+  ctx.shadowBlur = 4;
+  ctx.strokeStyle = '#0e4a72';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  // ハイライト
+  ctx.strokeStyle = 'rgba(80,160,220,0.2)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCell(ctx, x, y, color, emoji) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x*CELL, y*CELL, CELL, CELL);
+  ctx.font = `${Math.floor(CELL * 0.55)}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(emoji, x*CELL + CELL/2, y*CELL + CELL/2);
+}
+
+// ======== キーボード ========
+const keyMap = {
+  ArrowLeft: [-1,0], ArrowRight: [1,0],
+  ArrowUp: [0,-1], ArrowDown: [0,1],
+  a: [-1,0], d: [1,0], w: [0,-1], s: [0,1],
+  h: [-1,0], l: [1,0], k: [0,-1], j: [0,1],
+};
+const btnMap = {
+  ArrowLeft: 'btnLeft', ArrowRight: 'btnRight',
+  ArrowUp: 'btnUp', ArrowDown: 'btnDown',
+};
+
+document.addEventListener('keydown', e => {
+  if (keyMap[e.key]) {
+    e.preventDefault();
+    const [dx, dy] = keyMap[e.key];
+    move(dx, dy);
+    if (btnMap[e.key]) {
+      const btn = document.getElementById(btnMap[e.key]);
+      if (btn) { btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 150); }
+    }
+  }
+});
+
+// タッチスワイプ
+let touchStartX = 0, touchStartY = 0;
+document.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  const ax = Math.abs(dx), ay = Math.abs(dy);
+  if (Math.max(ax, ay) < 15) return;
+  if (ax > ay) move(dx > 0 ? 1 : -1, 0);
+  else move(0, dy > 0 ? 1 : -1);
+}, { passive: true });
+
+// タッチボタン（直接ontouchstart使えないので追加）
+['btnUp','btnDown','btnLeft','btnRight'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if (id === 'btnUp') move(0,-1);
+    if (id === 'btnDown') move(0,1);
+    if (id === 'btnLeft') move(-1,0);
+    if (id === 'btnRight') move(1,0);
+    el.classList.add('pressed');
+    setTimeout(() => el.classList.remove('pressed'), 150);
+  }, { passive: false });
+});
+
+// 泡を生成
+function createBubbles() {
+  for (let i = 0; i < 18; i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = 4 + Math.random() * 12;
+    b.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      bottom:-${size}px;
+      animation-duration:${6+Math.random()*10}s;
+      animation-delay:${Math.random()*8}s;
+    `;
+    document.body.appendChild(b);
+  }
+}
+
+// 初期化
+createBubbles();
+newMaze();
+</script>
+</body>
+</html>
