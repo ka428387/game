@@ -129,9 +129,10 @@
   .card-mori  { animation-delay: 0.1s; }
   .card-umi   { animation-delay: 0.2s; }
   .card-machi { animation-delay: 0.3s; }
-  .card-rocket { animation-delay: 0.4s; }
-  .card-neko  { animation-delay: 0.5s; }
-  .card-nakama { animation-delay: 0.6s; }
+  .card-space { animation-delay: 0.4s; }
+  .card-rocket { animation-delay: 0.5s; }
+  .card-neko  { animation-delay: 0.6s; }
+  .card-nakama { animation-delay: 0.7s; }
 
   /* セクション見出し */
   .section-label {
@@ -219,6 +220,14 @@
     box-shadow: 0 6px 0 #062a4a, 0 12px 30px rgba(0,0,0,0.1);
   }
 
+  /* 宇宙カード */
+  .card-space .card-inner {
+    background: linear-gradient(135deg, #1b1147 0%, #4a2f8c 50%, #6ee7ff 100%);
+  }
+  .card-space {
+    box-shadow: 0 6px 0 #0d0a2e, 0 12px 30px rgba(0,0,0,0.1);
+  }
+
   /* カード装飾パターン */
   .card-inner::before {
     content: '';
@@ -257,6 +266,7 @@
   .card:nth-child(6) .card-icon { animation-delay: -2.5s; }
   .card-umi    .card-icon { animation-delay: -1s; }
   .card-machi  .card-icon { animation-delay: -2s; }
+  .card-space  .card-icon { animation-delay: -1.2s; }
   .card-rocket .card-icon { animation-delay: -0.5s; }
   .card-neko   .card-icon { animation-delay: -1.5s; }
   .card-nakama .card-icon { animation-delay: -2.5s; }
@@ -411,6 +421,23 @@
             <span class="level-tag">かんたん</span>
             <span class="level-tag">ふつう</span>
             <span class="level-tag">むずかしい</span>
+          </div>
+        </div>
+        <div class="card-arrow">▶</div>
+      </div>
+    </a>
+
+    <!-- 宇宙の迷路 -->
+    <a class="card card-space" href="space-maze.html">
+      <div class="card-inner">
+        <div class="card-icon">🚀</div>
+        <div class="card-text">
+          <div class="card-title">宇宙の迷路</div>
+          <div class="card-desc">うちゅうをとんでゴールへ！</div>
+          <div class="card-levels">
+            <span class="level-tag">ふつう</span>
+            <span class="level-tag">むずかしい</span>
+            <span class="level-tag">げきむず</span>
           </div>
         </div>
         <div class="card-arrow">▶</div>
