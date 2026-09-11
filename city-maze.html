@@ -40,6 +40,7 @@
     align-items: center;
     overflow-x: hidden;
     position: relative;
+    padding-top: 52px;
     padding-bottom: 30px;
   }
 
@@ -83,6 +84,29 @@
     border-radius: 4px 4px 0 0;
     flex-shrink: 0;
   }
+
+  /* ホームへもどるボタン */
+  .home-btn {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 16px;
+    border: 2px solid var(--orange);
+    border-radius: 30px;
+    background: #fff;
+    color: var(--dark);
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 3px 0 var(--orange), 0 4px 12px rgba(0,0,0,0.12);
+  }
+  .home-btn:hover { background: var(--yellow2); }
+  .home-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--orange); }
 
   h1 {
     position: relative;
@@ -363,6 +387,8 @@
 </style>
 </head>
 <body>
+
+<a class="home-btn" href="index.html">🏠 ホームへ</a>
 
 <!-- 雲 -->
 <div class="cloud" id="cloudLayer"></div>

@@ -31,13 +31,30 @@ body{
 /* ヘッダー */
 header{
   width:100%;background:var(--wood);
-  padding:14px 20px;
-  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
   box-shadow:0 3px 10px var(--shadow);
   margin-bottom:2px;
 }
-.app-title{font-size:1.1rem;font-weight:900;color:var(--paper);letter-spacing:.05em}
-.star-row{display:flex;gap:3px;flex-wrap:wrap;max-width:160px;justify-content:flex-end}
+.app-title{font-size:1.05rem;font-weight:900;color:var(--paper);letter-spacing:.05em;text-align:center}
+.star-row{display:flex;gap:3px;flex-wrap:wrap;max-width:140px;justify-content:flex-end}
+/* ホームへもどるボタン */
+.home-btn{
+  flex:none;display:inline-flex;align-items:center;gap:4px;
+  padding:6px 12px;border:2px solid var(--paper);border-radius:20px;
+  background:rgba(255,255,255,.16);color:var(--paper);
+  font-family:'Zen Maru Gothic',sans-serif;font-size:.75rem;font-weight:900;
+  text-decoration:none;white-space:nowrap;
+}
+.home-btn:hover{background:var(--paper);color:var(--wood-dk)}
+.home-btn:active{transform:translateY(2px)}
+/* せまい画面ではヘッダーを2段にする */
+@media (max-width:520px){
+  header{flex-wrap:wrap;row-gap:8px}
+  .home-btn{order:1}
+  .app-title{order:2;flex:1 1 auto;min-width:0;text-align:left}
+  .star-row{order:3;flex:1 1 100%;max-width:none;justify-content:center}
+}
 .star{font-size:1.1rem;transition:transform .3s}
 .star.earned{transform:scale(1.25)}
 
@@ -161,6 +178,7 @@ header{
 <body>
 
 <header>
+  <a class="home-btn" href="index.html">🏠 ホームへ</a>
   <div class="app-title">なかまはずれは どれ？</div>
   <div class="star-row" id="starRow"></div>
 </header>

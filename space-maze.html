@@ -22,9 +22,21 @@
       linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 50%, var(--bg3) 100%);
     min-height:100vh;
     display:flex; flex-direction:column; align-items:center;
-    padding:10px 12px 24px; overflow-x:hidden;
+    padding:56px 12px 24px; overflow-x:hidden;
     touch-action:manipulation; user-select:none;
   }
+  .home-btn{
+    position:fixed; top:12px; left:12px; z-index:40;
+    display:inline-flex; align-items:center; gap:5px;
+    font:inherit; font-weight:700; font-size:14px; color:var(--text);
+    text-decoration:none;
+    padding:8px 16px; border:2px solid rgba(110,231,255,.45); border-radius:22px;
+    background:linear-gradient(180deg, rgba(59,42,140,.8), rgba(13,13,43,.8));
+    box-shadow:0 0 14px rgba(110,231,255,.25);
+    transition:transform .08s, box-shadow .15s, border-color .15s;
+  }
+  .home-btn:hover{border-color:var(--cyan); box-shadow:0 0 18px rgba(110,231,255,.55);}
+  .home-btn:active{transform:translateY(2px) scale(.97);}
   h1{
     font-size:clamp(22px,6vw,30px); margin:6px 0 2px; letter-spacing:1px;
     text-shadow:0 0 14px rgba(110,231,255,.55), 0 0 30px rgba(107,70,224,.45);
@@ -97,6 +109,7 @@
 </style>
 </head>
 <body>
+  <a class="home-btn" href="index.html">🏠 ホームへ</a>
   <h1>🚀 うちゅうのめいろ 🚀</h1>
 
   <div class="diff" id="diff">

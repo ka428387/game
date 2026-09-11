@@ -37,6 +37,7 @@
     justify-content: flex-start;
     overflow-x: hidden;
     position: relative;
+    padding-top: 52px;
     padding-bottom: 30px;
   }
 
@@ -87,6 +88,31 @@
     33% { transform: translate(60px, -30px) scale(1.2); }
     66% { transform: translate(-40px, 20px) scale(0.9); }
   }
+
+  /* ホームへもどるボタン */
+  .home-btn {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 9px 18px;
+    border: 2px solid rgba(100,200,255,0.45);
+    border-radius: 30px;
+    background: rgba(10,30,60,0.75);
+    backdrop-filter: blur(8px);
+    color: var(--foam);
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.45);
+    transition: background 0.2s, color 0.2s, transform 0.1s;
+  }
+  .home-btn:hover { background: rgba(20,80,140,0.9); color: var(--bright); }
+  .home-btn:active { transform: translateY(2px); }
 
   h1 {
     font-family: 'Kaisei Decol', serif;
@@ -349,6 +375,8 @@
 </style>
 </head>
 <body>
+
+<a class="home-btn" href="index.html">🏠 ホームへ</a>
 
 <div class="caustic" style="top:10%;left:20%"></div>
 <div class="caustic" style="top:60%;left:70%;animation-delay:-3s"></div>

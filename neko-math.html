@@ -33,6 +33,7 @@
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
+    padding-top: 52px;
   }
 
   /* Paw print background */
@@ -52,7 +53,7 @@
   /* ===== SCREENS ===== */
   .screen {
     display: none;
-    min-height: 100vh;
+    min-height: calc(100vh - 52px);
     position: relative;
     z-index: 1;
     animation: fadeIn 0.4s ease;
@@ -63,6 +64,30 @@
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  /* ===== HOME BUTTON ===== */
+  .home-btn {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 16px;
+    border: 2px solid var(--cat-light);
+    border-radius: 22px;
+    background: var(--warm-white);
+    color: var(--soft-brown);
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 3px 8px var(--shadow);
+    transition: all 0.2s;
+  }
+  .home-btn:hover { background: var(--cat-light); color: var(--deep-brown); }
+  .home-btn:active { transform: translateY(2px); }
 
   /* ===== HEADER ===== */
   .game-header {
@@ -655,6 +680,8 @@
 </head>
 <body>
 
+<a class="home-btn" href="index.html">🏠 ホームへ</a>
+
 <!-- ===== TITLE SCREEN ===== -->
 <div id="screen-title" class="screen active">
   <div class="game-header">
@@ -853,7 +880,7 @@
     <div class="btn-row">
       <button class="btn-primary" onclick="retryGame()">もういちど ▶</button>
       <button class="btn-secondary" onclick="showScreen('level')">レベルをかえる</button>
-      <button class="btn-secondary" onclick="showScreen('title')">トップへ</button>
+      <button class="btn-secondary" onclick="showScreen('title')">コースえらびへ</button>
     </div>
   </div>
 </div>
