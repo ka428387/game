@@ -41,3 +41,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .asobi-sound { right: calc(10px + env(safe-area-inset-right)); width: 44px; padding: 0; font-size: 20px; }
 .asobi-sound.off { background: rgba(255, 255, 255, 0.7); }
 .asobi-btn.in-slot { position: static; flex: none; }
+
+/* アプリ（iPhone）では画面のいちばん上（時計・電池の帯）の下までゲームの背景を広げ、中身は帯の下から始める。
+   ブラウザでは env() が 0 なので何も変わらない */
+html { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
