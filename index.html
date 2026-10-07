@@ -2,10 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎮 あそびのせかい</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>あそびのせかい</title>
+<link rel="stylesheet" href="common/asobi.css">
+<script src="common/asobi.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -359,7 +360,7 @@
   }
 </style>
 </head>
-<body>
+<body data-asobi="index">
 
 <div class="sky"></div>
 <div class="clouds" id="clouds"></div>
@@ -376,12 +377,12 @@
 
     <div class="section-label">🗺️ めいろ</div>
 
-    <!-- 森の迷路 -->
+    <!-- もりのめいろ -->
     <a class="card card-mori" href="forest-maze.html">
       <div class="card-inner">
         <div class="card-icon">🐿️</div>
         <div class="card-text">
-          <div class="card-title">森の迷路</div>
+          <div class="card-title">もりのめいろ</div>
           <div class="card-desc">もりのなかをたんけんしよう！</div>
           <div class="card-levels">
             <span class="level-tag">かんたん</span>
@@ -393,12 +394,12 @@
       </div>
     </a>
 
-    <!-- 海の迷路 -->
+    <!-- うみのめいろ -->
     <a class="card card-umi" href="ocean-maze.html">
       <div class="card-inner">
         <div class="card-icon">🐠</div>
         <div class="card-text">
-          <div class="card-title">海の迷路</div>
+          <div class="card-title">うみのめいろ</div>
           <div class="card-desc">しんかいをおよいでゴールへ！</div>
           <div class="card-levels">
             <span class="level-tag">かんたん</span>
@@ -410,12 +411,12 @@
       </div>
     </a>
 
-    <!-- 街の迷路 -->
+    <!-- まちのめいろ -->
     <a class="card card-machi" href="city-maze.html">
       <div class="card-inner">
         <div class="card-icon">🚶</div>
         <div class="card-text">
-          <div class="card-title">街の迷路</div>
+          <div class="card-title">まちのめいろ</div>
           <div class="card-desc">まちをさんぽしてゴールへ！</div>
           <div class="card-levels">
             <span class="level-tag">かんたん</span>
@@ -427,12 +428,12 @@
       </div>
     </a>
 
-    <!-- 宇宙の迷路 -->
+    <!-- うちゅうのめいろ -->
     <a class="card card-space" href="space-maze.html">
       <div class="card-inner">
         <div class="card-icon">🚀</div>
         <div class="card-text">
-          <div class="card-title">宇宙の迷路</div>
+          <div class="card-title">うちゅうのめいろ</div>
           <div class="card-desc">うちゅうをとんでゴールへ！</div>
           <div class="card-levels">
             <span class="level-tag">ふつう</span>
@@ -462,16 +463,17 @@
       </div>
     </a>
 
-    <!-- ねこ算数ランド -->
+    <!-- ねこさんすうランド -->
     <a class="card card-neko" href="neko-math.html">
       <div class="card-inner">
         <div class="card-icon">🐱</div>
         <div class="card-text">
-          <div class="card-title">ねこ算数ランド</div>
-          <div class="card-desc">ねこといっしょにかけ算・わり算！</div>
+          <div class="card-title">ねこさんすうランド</div>
+          <div class="card-desc">ねこといっしょにかけざん・わりざん！</div>
           <div class="card-levels">
-            <span class="level-tag">かけ算</span>
-            <span class="level-tag">わり算</span>
+            <span class="level-tag">しょうがくせい むけ</span>
+            <span class="level-tag">かけざん</span>
+            <span class="level-tag">わりざん</span>
           </div>
         </div>
         <div class="card-arrow">▶</div>

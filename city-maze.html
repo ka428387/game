@@ -2,10 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🏙️ 街の迷路 🏙️</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>まちのめいろ｜あそびのせかい</title>
+<link rel="stylesheet" href="common/asobi.css">
+<script src="common/asobi.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
 
   :root {
     --sky: #fff8e7;
@@ -85,28 +86,6 @@
     flex-shrink: 0;
   }
 
-  /* ホームへもどるボタン */
-  .home-btn {
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    z-index: 40;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 8px 16px;
-    border: 2px solid var(--orange);
-    border-radius: 30px;
-    background: #fff;
-    color: var(--dark);
-    font-family: 'M PLUS Rounded 1c', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 800;
-    text-decoration: none;
-    box-shadow: 0 3px 0 var(--orange), 0 4px 12px rgba(0,0,0,0.12);
-  }
-  .home-btn:hover { background: var(--yellow2); }
-  .home-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--orange); }
 
   h1 {
     position: relative;
@@ -384,11 +363,20 @@
     pointer-events: none;
     z-index: 0;
   }
+
+  /* スマホ1画面に めいろと やじるしが おさまるように、上のボタンを小さく1列ずつにする */
+  h1 { margin-top: 58px; }
+  .level-select { flex-wrap: nowrap; gap: 6px; margin: 8px 0 6px; }
+  .level-btn { padding: 8px 12px; font-size: 13px; }
+  .info-bar { gap: 6px; margin: 4px 0; flex-wrap: nowrap; }
+  .info-item { padding: 4px 10px; font-size: 12px; }
+  .ctrl-bar { gap: 6px; margin: 4px 0 8px; flex-wrap: nowrap; }
+  .ctrl-btn { padding: 6px 10px; font-size: 12px; }
+  .arrow-pad { margin-top: 10px; }
 </style>
 </head>
-<body>
+<body data-asobi="game">
 
-<a class="home-btn" href="index.html">🏠 ホームへ</a>
 
 <!-- 雲 -->
 <div class="cloud" id="cloudLayer"></div>
@@ -401,30 +389,30 @@
   <div class="clear-box">
     <div class="person-emoji">🚶</div>
     <div class="clear-title">🎉 ゴール！</div>
-    <div class="clear-sub">無事に街を歩き抜けたよ！</div>
+    <div class="clear-sub">ぶじに まちを あるききったよ！</div>
     <div class="clear-steps" id="clearSteps"></div>
-    <button class="clear-btn" onclick="document.getElementById('clearOverlay').classList.remove('show'); newMaze();">もう一度あそぶ</button>
+    <button class="clear-btn" onclick="document.getElementById('clearOverlay').classList.remove('show'); newMaze();">もういちど あそぶ</button>
   </div>
 </div>
 
-<h1>🏙️ 街の迷路 🏙️</h1>
-<p class="subtitle">街をさんぽして ゴールを目指そう！</p>
+<h1>🏙️ まちのめいろ 🏙️</h1>
+<p class="subtitle">まちを さんぽして ゴールを めざそう！</p>
 
 <div class="level-select">
-  <button class="level-btn" data-size="19" onclick="setLevel(this,19)">🚶 かんたん（19×19）</button>
-  <button class="level-btn" data-size="23" onclick="setLevel(this,23)">🚗 ふつう（23×23）</button>
-  <button class="level-btn active" data-size="27" onclick="setLevel(this,27)">🏙️ むずかしい（27×27）</button>
+  <button class="level-btn active" data-size="19" onclick="setLevel(this,19)">🚶 かんたん</button>
+  <button class="level-btn" data-size="23" onclick="setLevel(this,23)">🚗 ふつう</button>
+  <button class="level-btn" data-size="27" onclick="setLevel(this,27)">🏙️ むずかしい</button>
 </div>
 
 <div class="info-bar">
-  <div class="info-item">🚶 歩いたマス：<span class="val" id="stepCount">0</span></div>
+  <div class="info-item">🚶 あるいたマス：<span class="val" id="stepCount">0</span></div>
   <div class="info-item">🏁 ゴールまで：<span class="val" id="remainInfo">-</span></div>
 </div>
 
 <div class="ctrl-bar">
-  <button class="ctrl-btn" onclick="newMaze()">🔄 新しい迷路</button>
+  <button class="ctrl-btn" onclick="newMaze()">🔄 あたらしい めいろ</button>
   <button class="ctrl-btn" onclick="toggleHint()">💡 ヒント</button>
-  <button class="ctrl-btn music-btn" id="musicBtn" onclick="toggleMusic()">🎵 BGM ON</button>
+  <button class="ctrl-btn music-btn" id="musicBtn" onclick="toggleMusic()">🎵 おんがく：なし</button>
 </div>
 
 <div class="maze-container">
@@ -445,14 +433,16 @@
 
 <script>
 // ======== 設定 ========
-let GRID = 27; // デフォルト むずかしい
+let GRID = 19; // さいしょは かんたん
 let CELL = 18; // セルサイズ(px) ← 動的に計算
 let showHint = false;
 
 function calcCell() {
   // 画面幅からパディング・ボーダー分を引いて、グリッド数で割る
   const maxW = Math.min(window.innerWidth - 28, 520); // 左右余白 14px×2 + border 6px
-  CELL = Math.floor(maxW / GRID);
+  // 高さも見る：めいろの下に やじるし（約200px）が はいるように
+  const maxH = window.innerHeight - canvas.getBoundingClientRect().top - window.scrollY - 200;
+  CELL = Math.floor(Math.min(maxW, Math.max(maxH, 200)) / GRID);
   if (CELL < 10) CELL = 10;
   if (CELL > 22) CELL = 22;
 }
@@ -625,7 +615,7 @@ function updateRemain() {
   const endX = g-2, endY = g-2;
   const path = bfs(maze, px, py, endX, endY);
   document.getElementById('remainInfo').textContent =
-    path.length > 1 ? `約${path.length-1}マス` : 'ゴール！';
+    path.length > 1 ? `やく${path.length-1}マス` : 'ゴール！';
 }
 
 // ======== 移動 ========
@@ -645,9 +635,9 @@ function move(dx, dy) {
   // ゴール判定
   if (px===g-2 && py===g-2) {
     setTimeout(() => {
-      document.getElementById('clearSteps').textContent = `歩いたマス: ${steps}マス`;
+      document.getElementById('clearSteps').textContent = `あるいたマス: ${steps}マス`;
       document.getElementById('clearOverlay').classList.add('show');
-      if (musicOn) playClearSound();
+      initAudio(); playClearSound();
     }, 200);
   }
 }
@@ -851,11 +841,11 @@ function toggleMusic() {
   musicOn = !musicOn;
   const btn = document.getElementById('musicBtn');
   if (musicOn) {
-    btn.textContent = '🎵 BGM OFF';
+    btn.textContent = '🎵 おんがく：あり';
     btn.classList.add('on');
     startMusic();
   } else {
-    btn.textContent = '🎵 BGM ON';
+    btn.textContent = '🎵 おんがく：なし';
     btn.classList.remove('on');
     stopMusic();
   }

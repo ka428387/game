@@ -1,0 +1,43 @@
+/* あそびのせかい 共通の見た目（全ページで、各ページの <style> より前に読み込む） */
+
+/* 字体：Zen Maru Gothic を、使う文字だけにしぼって同梱（tools/make_fonts.py で作る）。ネットがなくても同じ字体 */
+@font-face { font-family: 'AsobiMaru'; src: url('../fonts/asobi-maru-500.woff2') format('woff2'); font-weight: 100 599; font-display: swap; }
+@font-face { font-family: 'AsobiMaru'; src: url('../fonts/asobi-maru-700.woff2') format('woff2'); font-weight: 600 799; font-display: swap; }
+@font-face { font-family: 'AsobiMaru'; src: url('../fonts/asobi-maru-900.woff2') format('woff2'); font-weight: 800 1000; font-display: swap; }
+
+:root { --asobi-font: 'AsobiMaru', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', sans-serif; }
+
+/* ゲームごとにばらばらだった字体を、ここで1つにそろえる */
+body, body * { font-family: var(--asobi-font) !important; }
+
+/* 子ども向けのさわり心地：ダブルタップで拡大しない・長押しで文字を選ばない・タップの灰色を出さない */
+html { -webkit-text-size-adjust: 100%; }
+body {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+}
+input, textarea { -webkit-user-select: text; user-select: text; }
+
+/* 左上「ホームへ」・右上「おと」：どのゲームでも同じ形・同じ場所 */
+.asobi-btn {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  z-index: 1000;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  min-height: 44px; padding: 0 16px;
+  border: none; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #3d3a4b;
+  font-size: 15px; font-weight: 700; line-height: 1;
+  text-decoration: none; white-space: nowrap;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+.asobi-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.16); }
+.asobi-home  { left:  calc(10px + env(safe-area-inset-left)); }
+.asobi-sound { right: calc(10px + env(safe-area-inset-right)); width: 44px; padding: 0; font-size: 20px; }
+.asobi-sound.off { background: rgba(255, 255, 255, 0.7); }
+.asobi-btn.in-slot { position: static; flex: none; }

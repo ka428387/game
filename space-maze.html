@@ -2,8 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🚀 うちゅうのめいろ 🚀</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>うちゅうのめいろ｜あそびのせかい</title>
+<link rel="stylesheet" href="common/asobi.css">
+<script src="common/asobi.js"></script>
 <style>
   :root{
     --bg1:#0b0b2b; --bg2:#1b1147; --bg3:#2a1a5e;
@@ -25,18 +27,6 @@
     padding:56px 12px 24px; overflow-x:hidden;
     touch-action:manipulation; user-select:none;
   }
-  .home-btn{
-    position:fixed; top:12px; left:12px; z-index:40;
-    display:inline-flex; align-items:center; gap:5px;
-    font:inherit; font-weight:700; font-size:14px; color:var(--text);
-    text-decoration:none;
-    padding:8px 16px; border:2px solid rgba(110,231,255,.45); border-radius:22px;
-    background:linear-gradient(180deg, rgba(59,42,140,.8), rgba(13,13,43,.8));
-    box-shadow:0 0 14px rgba(110,231,255,.25);
-    transition:transform .08s, box-shadow .15s, border-color .15s;
-  }
-  .home-btn:hover{border-color:var(--cyan); box-shadow:0 0 18px rgba(110,231,255,.55);}
-  .home-btn:active{transform:translateY(2px) scale(.97);}
   h1{
     font-size:clamp(22px,6vw,30px); margin:6px 0 2px; letter-spacing:1px;
     text-shadow:0 0 14px rgba(110,231,255,.55), 0 0 30px rgba(107,70,224,.45);
@@ -57,7 +47,9 @@
   .status{display:flex; gap:14px; align-items:center; margin:2px 0 8px; font-weight:700; font-size:16px;}
   .status .gold{color:var(--gold);} .status .cyan{color:var(--cyan);}
   .stage{
-    position:relative; width:min(94vw, 480px); aspect-ratio:1/1;
+    position:relative; aspect-ratio:1/1;
+    /* スマホ1画面に めいろと やじるしが おさまる大きさ */
+    width:max(240px, min(94vw, 480px, calc(100svh - 520px)));
     border-radius:18px; overflow:hidden;
     border:2px solid rgba(110,231,255,.4);
     box-shadow:0 0 26px rgba(107,70,224,.5), inset 0 0 26px rgba(0,0,0,.5);
@@ -90,11 +82,6 @@
   .btn:active{transform:translateY(4px); box-shadow:0 0 0 #c98800, 0 2px 8px rgba(0,0,0,.35);}
   .btn.cyan{background:linear-gradient(180deg,#9bf0ff,#4dd0e1); box-shadow:0 4px 0 #2596a6,0 6px 14px rgba(0,0,0,.35);}
   .btn.cyan:active{box-shadow:0 0 0 #2596a6,0 2px 8px rgba(0,0,0,.35);}
-  .sound{
-    position:absolute; top:8px; right:8px; z-index:5;
-    width:40px; height:40px; border-radius:12px; cursor:pointer; font-size:20px;
-    background:rgba(13,13,43,.6); color:var(--cyan); border:1px solid rgba(110,231,255,.4);
-  }
   .win{
     position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
     gap:6px; background:radial-gradient(circle at 50% 40%, rgba(43,26,94,.92), rgba(7,7,31,.95));
@@ -108,8 +95,7 @@
   @media (max-width:360px){ .pad{grid-template-columns:repeat(3,56px); grid-template-rows:repeat(3,56px);} }
 </style>
 </head>
-<body>
-  <a class="home-btn" href="index.html">🏠 ホームへ</a>
+<body data-asobi="game">
   <h1>🚀 うちゅうのめいろ 🚀</h1>
 
   <div class="diff" id="diff">
@@ -124,7 +110,6 @@
   </div>
 
   <div class="stage">
-    <button class="sound" id="sound" aria-label="おと">🔊</button>
     <canvas id="cv"></canvas>
     <div class="win" id="win">
       <h2>🎉 ゴール！ 🎉</h2>
@@ -306,7 +291,7 @@
   }, {passive:true});
   cv.addEventListener('touchend', function(){ tracking=false; }, {passive:true});
 
-  let actx=null, muted=false;
+  let actx=null; const muted=false; // 消すのは右上の共通「おと」ボタン（common/asobi.js）
   function ensureAudio(){
     if(!actx && !muted){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
     if(actx&&actx.state==='suspended'){ try{ actx.resume(); }catch(e){} }
@@ -326,10 +311,6 @@
     if(muted) return; ensureAudio(); if(!actx) return;
     [523,659,784,1047].forEach(function(f,i){ setTimeout(function(){ beep(f,0.18,'triangle'); }, i*120); });
   }
-  document.getElementById('sound').addEventListener('click', function(){
-    muted=!muted; this.textContent = muted?'🔇':'🔊';
-    if(!muted) ensureAudio();
-  });
 
   function burst(c,r){
     for(let i=0;i<10;i++){

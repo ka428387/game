@@ -2,10 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🐱 ねこ算数ランド</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>ねこさんすうランド｜あそびのせかい</title>
+<link rel="stylesheet" href="common/asobi.css">
+<script src="common/asobi.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap');
 
   :root {
     --cream: #FFF8F0;
@@ -66,28 +67,6 @@
   }
 
   /* ===== HOME BUTTON ===== */
-  .home-btn {
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    z-index: 40;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 8px 16px;
-    border: 2px solid var(--cat-light);
-    border-radius: 22px;
-    background: var(--warm-white);
-    color: var(--soft-brown);
-    font-family: 'M PLUS Rounded 1c', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 700;
-    text-decoration: none;
-    box-shadow: 0 3px 8px var(--shadow);
-    transition: all 0.2s;
-  }
-  .home-btn:hover { background: var(--cat-light); color: var(--deep-brown); }
-  .home-btn:active { transform: translateY(2px); }
 
   /* ===== HEADER ===== */
   .game-header {
@@ -98,7 +77,7 @@
 
   .game-title {
     font-family: 'Zen Maru Gothic', sans-serif;
-    font-size: clamp(2rem, 7vw, 3.2rem);
+    font-size: clamp(1.6rem, 7vw, 3.2rem); white-space: nowrap;
     font-weight: 900;
     color: var(--deep-brown);
     letter-spacing: 0.05em;
@@ -678,15 +657,14 @@
   }
 </style>
 </head>
-<body>
+<body data-asobi="game">
 
-<a class="home-btn" href="index.html">🏠 ホームへ</a>
 
 <!-- ===== TITLE SCREEN ===== -->
 <div id="screen-title" class="screen active">
   <div class="game-header">
-    <div class="game-title">🐱 ねこ算数ランド</div>
-    <div class="game-subtitle">ねこといっしょに算数をたのしもう！</div>
+    <div class="game-title">🐱 ねこさんすうランド</div>
+    <div class="game-subtitle">ねこといっしょにさんすうをたのしもう！</div>
   </div>
 
   <svg class="hero-cat" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
@@ -733,13 +711,13 @@
   <div class="card-row">
     <div class="card card-multiply" onclick="selectCourse('multiply')">
       <span class="card-icon">✖️</span>
-      <div class="card-title">かけ算コース</div>
-      <div class="card-desc">かけ算のれんしゅうをしよう！<br>1けたから大きいかずまで</div>
+      <div class="card-title">かけざんコース</div>
+      <div class="card-desc">かけざんのれんしゅうをしよう！<br>1けたから おおきい かずまで</div>
     </div>
     <div class="card card-divide" onclick="selectCourse('divide')">
       <span class="card-icon">➗</span>
-      <div class="card-title">わり算コース</div>
-      <div class="card-desc">わり算にチャレンジ！<br>かんたんから3けた➗2けたまで</div>
+      <div class="card-title">わりざんコース</div>
+      <div class="card-desc">わりざんにチャレンジ！<br>かんたんから3けた➗2けたまで</div>
     </div>
   </div>
 
@@ -964,7 +942,7 @@ function showScreen(name) {
 // ===== COURSE SELECTION =====
 function selectCourse(course) {
   currentCourse = course;
-  const title = course === 'multiply' ? '✖️ かけ算コース' : '➗ わり算コース';
+  const title = course === 'multiply' ? '✖️ かけざんコース' : '➗ わりざんコース';
   document.getElementById('level-course-title').textContent = title;
   buildLevelGrid();
   showScreen('level');

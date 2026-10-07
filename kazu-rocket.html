@@ -2,10 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>かずロケット🚀</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>かずロケット｜あそびのせかい</title>
+<link rel="stylesheet" href="common/asobi.css">
+<script src="common/asobi.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
 
 * { box-sizing:border-box; margin:0; padding:0; touch-action:manipulation; }
 
@@ -28,17 +29,6 @@ body {
 .screen.active { display:flex; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
 
-/* ── ホームへもどるボタン ── */
-.home-btn {
-  position:fixed; top:12px; left:12px; z-index:40;
-  display:inline-flex; align-items:center; gap:5px;
-  background:rgba(255,255,255,.14); border:2px solid rgba(255,255,255,.3);
-  border-radius:22px; padding:8px 16px;
-  color:#fff; font-family:'Nunito',sans-serif; font-size:.9rem; font-weight:700;
-  text-decoration:none; backdrop-filter:blur(6px);
-}
-.home-btn:hover { background:rgba(255,255,255,.24); }
-.home-btn:active { transform:translateY(2px); }
 
 /* ── コース選択 ── */
 .main-title { font-size:2.2rem; font-weight:900; color:#fff;
@@ -153,11 +143,6 @@ body {
 .menu-btn  { background:rgba(255,255,255,.1); border:2px solid rgba(255,255,255,.2);
   border-radius:12px; padding:7px 18px; color:#fff;
   font-family:'Nunito',sans-serif; font-size:.9rem; font-weight:700; cursor:pointer; }
-.sound-btn { background:rgba(255,255,255,.12); border:2px solid rgba(255,255,255,.25);
-  border-radius:12px; padding:7px 14px; color:#fff;
-  font-family:'Nunito',sans-serif; font-size:.85rem; font-weight:700; cursor:pointer; }
-.sound-btn.on  { background:rgba(255,215,64,.25); border-color:#ffd740; color:#ffd740; }
-.sound-btn.off { background:rgba(255,255,255,.07); color:rgba(255,255,255,.45); }
 
 /* フィードバック */
 .feedback { position:fixed; top:40%; left:50%; transform:translate(-50%,-50%);
@@ -195,8 +180,7 @@ body {
 @keyframes cffall { 0%{transform:translateY(-20px) rotate(0);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
 </style>
 </head>
-<body>
-<a class="home-btn" href="index.html">🏠 ホームへ</a>
+<body data-asobi="game">
 <div class="stars" id="stars"></div>
 
 <!-- コース選択 -->
@@ -226,10 +210,10 @@ body {
       <span class="icon">➖</span><span class="name">ひきざん</span><span class="desc">10〜100まで</span>
     </button>
     <button class="course-btn cm" onclick="selectCourse('mul')">
-      <span class="icon">✖️</span><span class="name">かけざん</span><span class="desc">九九〜大きい数</span>
+      <span class="icon">✖️</span><span class="name">かけざん</span><span class="desc">くく〜おおきいかず</span>
     </button>
     <button class="course-btn cd" onclick="selectCourse('div')">
-      <span class="icon">➗</span><span class="name">わりざん</span><span class="desc">九九〜大きい数</span>
+      <span class="icon">➗</span><span class="name">わりざん</span><span class="desc">くく〜おおきいかず</span>
     </button>
     <button class="course-btn cx" onclick="selectCourse('mix')">
       <span class="icon">🌈</span><span class="name">まぜまぜ</span><span class="desc">ぜんぶまじり</span>
@@ -270,7 +254,6 @@ body {
   </div>
   <div class="bottom-btns">
     <button class="menu-btn" onclick="goToMenu()">📋 メニューへ</button>
-    <button class="sound-btn on" id="btnSound" onclick="toggleSound()">🔊 おとあり</button>
   </div>
 </div>
 
@@ -408,13 +391,13 @@ const COURSES = {
     {label:'Lv5',hint:'〜100', type:'sub',max:100},
   ]},
   mul: { icon:'✖️', name:'かけざん', levels:[
-    {label:'Lv1',hint:'2の段',    type:'mul',tables:[2]},
-    {label:'Lv2',hint:'3・4の段', type:'mul',tables:[3,4]},
-    {label:'Lv3',hint:'5・6の段', type:'mul',tables:[5,6]},
-    {label:'Lv4',hint:'7・8の段', type:'mul',tables:[7,8]},
-    {label:'Lv5',hint:'9の段',    type:'mul',tables:[9]},
-    {label:'Lv6',hint:'2〜9全部', type:'mul',tables:[2,3,4,5,6,7,8,9]},
-    {label:'Lv7',hint:'大きい数', type:'mul_big',maxA:12,maxB:12},
+    {label:'Lv1',hint:'2のだん',    type:'mul',tables:[2]},
+    {label:'Lv2',hint:'3・4のだん', type:'mul',tables:[3,4]},
+    {label:'Lv3',hint:'5・6のだん', type:'mul',tables:[5,6]},
+    {label:'Lv4',hint:'7・8のだん', type:'mul',tables:[7,8]},
+    {label:'Lv5',hint:'9のだん',    type:'mul',tables:[9]},
+    {label:'Lv6',hint:'2〜9 ぜんぶ', type:'mul',tables:[2,3,4,5,6,7,8,9]},
+    {label:'Lv7',hint:'おおきいかず', type:'mul_big',maxA:12,maxB:12},
   ]},
   div: { icon:'➗', name:'わりざん', levels:[
     {label:'Lv1',hint:'÷2',       type:'div',tables:[2]},
@@ -422,12 +405,12 @@ const COURSES = {
     {label:'Lv3',hint:'÷5・6',    type:'div',tables:[5,6]},
     {label:'Lv4',hint:'÷7・8',    type:'div',tables:[7,8]},
     {label:'Lv5',hint:'÷9',       type:'div',tables:[9]},
-    {label:'Lv6',hint:'÷2〜9全部',type:'div',tables:[2,3,4,5,6,7,8,9]},
+    {label:'Lv6',hint:'÷2〜9 ぜんぶ',type:'div',tables:[2,3,4,5,6,7,8,9]},
   ]},
   mix: { icon:'🌈', name:'まぜまぜ', levels:[
-    {label:'Lv1',hint:'＋−10以内', type:'mix_as',max:10},
-    {label:'Lv2',hint:'＋−20以内', type:'mix_as',max:20},
-    {label:'Lv3',hint:'✖️÷九九',   type:'mix_md',tables:[2,3,4,5]},
+    {label:'Lv1',hint:'＋−10まで', type:'mix_as',max:10},
+    {label:'Lv2',hint:'＋−20まで', type:'mix_as',max:20},
+    {label:'Lv3',hint:'✖️÷ くく',   type:'mix_md',tables:[2,3,4,5]},
     {label:'Lv4',hint:'ぜんぶ',    type:'mix_all',max:20,tables:[2,3,4,5,6,7,8,9]},
   ]},
 };
@@ -733,7 +716,7 @@ function makeStars() {
 // ============================================================
 //  Audio Engine
 // ============================================================
-let actx=null, seEnabled=true, bgmEnabled=true;
+let actx=null, seEnabled=true, bgmEnabled=true; // 音を消すのは右上の共通「おと」ボタン（common/asobi.js）
 let bgmSchedulerId=null, bgmMasterGain=null;
 let bgmNextTime=0, bgmMelodyPos=0, bgmBassTime=0;
 
@@ -849,13 +832,6 @@ function stopBGM() {
   }
 }
 
-function toggleSound() {
-  seEnabled=bgmEnabled=!seEnabled;
-  const btn=document.getElementById('btnSound');
-  btn.classList.toggle('on',seEnabled); btn.classList.toggle('off',!seEnabled);
-  btn.textContent=seEnabled?'🔊 おとあり':'🔇 おとなし';
-  if(bgmEnabled){initAudio();startBGM();}else stopBGM();
-}
 
 // ============================================================
 //  起動

@@ -2,8 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🌲 もりのめいろ 🌲</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>もりのめいろ｜あそびのせかい</title>
+<link rel="stylesheet" href="common/asobi.css">
+<script src="common/asobi.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
   body {
@@ -129,25 +131,6 @@
     pointer-events: none;
     user-select: none;
   }
-  .home-btn {
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    z-index: 40;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 8px 16px;
-    font-size: 14px;
-    font-weight: 700;
-    text-decoration: none;
-    border: 2px solid #4a8a20;
-    border-radius: 22px;
-    background: #fff;
-    color: #1d5a00;
-    box-shadow: 0 3px 0 #4a8a20;
-  }
-  .home-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #4a8a20; }
   #hint {
     font-size: 12px;
     color: #2d6a10;
@@ -157,8 +140,7 @@
   }
 </style>
 </head>
-<body>
-<a class="home-btn" href="index.html">🏠 ホームへ</a>
+<body data-asobi="game">
 <div id="game-wrap">
   <div class="tree-deco" style="top:6px;left:8px">🌳</div>
   <div class="tree-deco" style="top:6px;right:8px">🌲</div>
@@ -168,9 +150,9 @@
   <div id="title">🌲 もりのめいろ 🌲</div>
 
   <div id="level-btns">
-    <button class="lv-btn" onclick="setLevel(1)">かんたん</button>
+    <button class="lv-btn active" onclick="setLevel(1)">かんたん</button>
     <button class="lv-btn" onclick="setLevel(2)">ふつう</button>
-    <button class="lv-btn active" onclick="setLevel(3)">むずかしい</button>
+    <button class="lv-btn" onclick="setLevel(3)">むずかしい</button>
   </div>
 
   <div id="canvas-wrap">
@@ -188,13 +170,13 @@
         <button class="dir-btn" onclick="move(1,0)">➡️</button>
       </div>
     </div>
-    <div id="hint">📱 スワイプでも動かせます</div>
+    <div id="hint">📱 スワイプでも うごかせるよ</div>
   </div>
 </div>
 
 <script>
 const LEVELS = { 1: {cols:7, rows:7}, 2: {cols:10, rows:10}, 3: {cols:13, rows:13} };
-let currentLevel = 3;
+let currentLevel = 1;
 let COLS, ROWS, CELL;
 let maze, playerX, playerY, goalX, goalY, won, steps, trail;
 const canvas = document.getElementById('maze');
@@ -269,6 +251,7 @@ function move(dx, dy) {
   if (playerX === goalX && playerY === goalY) {
     won = true;
     document.getElementById('message').textContent = '🎉 やったね！ゴール！ 🎉';
+    Asobi.sfx('clear');
     document.getElementById('restart-btn').style.display = 'inline-block';
     drawWin();
   }

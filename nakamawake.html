@@ -2,10 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>なかまはずれは どれ？</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>なかまはずれは どれ？｜あそびのせかい</title>
+<link rel="stylesheet" href="common/asobi.css">
+<script src="common/asobi.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap');
 
 :root {
   --cream:   #F4EFE4;
@@ -37,23 +38,15 @@ header{
   margin-bottom:2px;
 }
 .app-title{font-size:1.05rem;font-weight:900;color:var(--paper);letter-spacing:.05em;text-align:center}
+.slot{display:flex;flex:none}
 .star-row{display:flex;gap:3px;flex-wrap:wrap;max-width:140px;justify-content:flex-end}
-/* ホームへもどるボタン */
-.home-btn{
-  flex:none;display:inline-flex;align-items:center;gap:4px;
-  padding:6px 12px;border:2px solid var(--paper);border-radius:20px;
-  background:rgba(255,255,255,.16);color:var(--paper);
-  font-family:'Zen Maru Gothic',sans-serif;font-size:.75rem;font-weight:900;
-  text-decoration:none;white-space:nowrap;
-}
-.home-btn:hover{background:var(--paper);color:var(--wood-dk)}
-.home-btn:active{transform:translateY(2px)}
 /* せまい画面ではヘッダーを2段にする */
 @media (max-width:520px){
   header{flex-wrap:wrap;row-gap:8px}
-  .home-btn{order:1}
-  .app-title{order:2;flex:1 1 auto;min-width:0;text-align:left}
-  .star-row{order:3;flex:1 1 100%;max-width:none;justify-content:center}
+  .slot[data-asobi-slot="home"]{order:1}
+  .app-title{order:2;flex:1 1 0;min-width:0;text-align:center;font-size:.95rem;letter-spacing:0;white-space:nowrap}
+  .slot[data-asobi-slot="sound"]{order:3}
+  .star-row{order:4;flex:1 1 100%;max-width:none;justify-content:center}
 }
 .star{font-size:1.1rem;transition:transform .3s}
 .star.earned{transform:scale(1.25)}
@@ -175,12 +168,13 @@ header{
 .again-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood-dk)}
 </style>
 </head>
-<body>
+<body data-asobi="game">
 
 <header>
-  <a class="home-btn" href="index.html">🏠 ホームへ</a>
+  <span class="slot" data-asobi-slot="home"></span>
   <div class="app-title">なかまはずれは どれ？</div>
   <div class="star-row" id="starRow"></div>
+  <span class="slot" data-asobi-slot="sound"></span>
 </header>
 
 <div class="dots" id="dots"></div>
@@ -727,7 +721,7 @@ const ALL_QS = [
     tag:'🥚 たまごを うむ？',
     text:'なかまはずれは どれ？\nほかは みんな たまごを うむ！',
     hint:'たまごを うまないのは どれかな？',
-    explain:'とり・かめ・さかなは たまごを うむよ。ねこはたまごを うまない（赤ちゃんを うむ）！',
+    explain:'とり・かめ・さかなは たまごを うむよ。ねこはたまごを うまない（あかちゃんを うむ）！',
     items:[
       {svg:IL.tori,  label:'とり',  odd:false},
       {svg:IL.kame,  label:'かめ',  odd:false},
@@ -740,7 +734,7 @@ const ALL_QS = [
     tag:'🥚 たまごを うむ？',
     text:'なかまはずれは どれ？\nほかは みんな たまごを うむ！',
     hint:'たまごを うまないのは どれかな？',
-    explain:'とんぼ・かぶとむし・へびは たまごを うむよ。いぬはたまごを うまない（赤ちゃんを うむ）！',
+    explain:'とんぼ・かぶとむし・へびは たまごを うむよ。いぬはたまごを うまない（あかちゃんを うむ）！',
     items:[
       {svg:IL.tombo,  label:'とんぼ',    odd:false},
       {svg:IL.kabuto, label:'かぶとむし',odd:false},
@@ -802,7 +796,7 @@ const ALL_QS = [
   },
   /* ⑬ エンジンで動く vs 人力 その1 */
   {
-    tag:'🚗 エンジン vs 人力',
+    tag:'🚗 エンジン と ひとの ちから',
     text:'なかまはずれは どれ？',
     hint:'じぶんの ちからで うごかすのは どれ？',
     explain:'くるま・ひこうき・ふねは エンジンで うごくよ。じてんしゃは じぶんの あしで こぐ！',
@@ -815,7 +809,7 @@ const ALL_QS = [
   },
   /* ⑭ エンジンで動く vs 人力 その2 */
   {
-    tag:'🚀 エンジン vs 人力',
+    tag:'🚀 エンジン と ひとの ちから',
     text:'なかまはずれは どれ？',
     hint:'エンジンや もえるものの ちからで うごくのは どれ？',
     explain:'くるま・ロケット・ひこうきは エンジンで うごくよ。ボートは オールで こぐ！',
@@ -938,11 +932,13 @@ function tap(card,isOdd,grid,explain){
     const s=document.getElementById('s'+idx);
     if(s){s.textContent='⭐';s.classList.add('earned')}
     fb.textContent='⭕ せいかい！ よくわかったね！';
+    Asobi.sfx('ok');
     fb.className='feedback ok show';
   } else {
     card.classList.add('wrong');
     grid.querySelectorAll('.card').forEach(c=>{if(c!==card)c.classList.add('faded')});
-    fb.textContent='❌ ちがうよ！ もういちど かんがえてみよう！';
+    fb.textContent='❌ ざんねん！ つぎも がんばろう！';
+    Asobi.sfx('ng');
     fb.className='feedback ng show';
   }
   if(explain){ex.textContent='📖 '+explain; ex.className='explain show';}
@@ -968,6 +964,7 @@ function showComplete(){
 
   const cs=document.getElementById('completeScreen');
   cs.classList.add('show');
+  Asobi.sfx('clear');
   const pct=Math.round(score/TOTAL*100);
   const msg = score===TOTAL ? 'ぜんもん せいかい！ かんぺき！！'
             : score>=12    ? 'すごい！ よくできました！'
