@@ -351,9 +351,10 @@
   }
 
   /* 街のアニメーション */
+  /* 車の絵文字は左向きなので、左右反転（scaleX(-1)）して右へ走らせる */
   @keyframes carMove {
-    from { transform: translateX(-60px); }
-    to { transform: translateX(110vw); }
+    from { transform: translateX(-60px) scaleX(-1); }
+    to { transform: translateX(110vw) scaleX(-1); }
   }
   .car {
     position: fixed;
