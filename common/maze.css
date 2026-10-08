@@ -1,0 +1,107 @@
+/* めいろ4つ（もり・うみ・まち・うちゅう）共通の画面の骨組み。common/maze.js が組み立てる。
+   色は各ページの :root で --mz-* を決める（形・大きさ・並びはここで1つ） */
+:root {
+  --mz-fg: #333;               /* タイトル・情報の文字 */
+  --mz-title-shadow: none;
+  --mz-btn-bg: #fff;           /* むずかしさ・道具ボタン */
+  --mz-btn-fg: #333;
+  --mz-btn-edge: #999;
+  --mz-on-bg: #333;            /* えらんでいる・ついているボタン */
+  --mz-on-fg: #fff;
+  --mz-pad-bg: #fff;           /* やじるし */
+  --mz-pad-fg: #333;
+  --mz-pad-edge: #999;
+  --mz-board-edge: #999;       /* めいろのふち */
+  --mz-veil: rgba(0, 0, 0, 0.45); /* ゴール画面のうしろ */
+  --mz-card-bg: #fff;          /* ゴール画面のカード */
+  --mz-card-fg: #333;
+  --mz-card-accent: #f59e0b;
+}
+
+.mz {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%;
+  padding: 58px 12px 16px;
+}
+.mz-title {
+  margin: 0 0 8px;
+  font-size: 24px; font-weight: 900; letter-spacing: 0.06em;
+  color: var(--mz-fg); text-shadow: var(--mz-title-shadow);
+  text-align: center; white-space: nowrap;
+}
+
+/* むずかしさ・道具：同じ形のボタン */
+.mz-row { display: flex; gap: 6px; justify-content: center; margin: 0 0 8px; flex-wrap: nowrap; }
+.mz-btn {
+  min-height: 36px; padding: 0 12px;
+  border: 2px solid var(--mz-btn-edge); border-radius: 14px;
+  background: var(--mz-btn-bg); color: var(--mz-btn-fg);
+  font-size: 13px; font-weight: 800; white-space: nowrap;
+  box-shadow: 0 3px 0 var(--mz-btn-edge);
+  cursor: pointer;
+}
+.mz-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--mz-btn-edge); }
+.mz-btn.on { background: var(--mz-on-bg); color: var(--mz-on-fg); }
+.mz-levels .mz-btn { min-width: 84px; font-size: 14px; }
+
+.mz-info {
+  display: flex; gap: 14px; justify-content: center;
+  margin: 0 0 8px; min-height: 20px;
+  font-size: 14px; font-weight: 800; color: var(--mz-fg); text-shadow: var(--mz-title-shadow);
+}
+
+/* めいろ */
+.mz-board {
+  position: relative; line-height: 0;
+  border: 4px solid var(--mz-board-edge); border-radius: 12px; overflow: hidden;
+  touch-action: none;
+}
+.mz-board canvas { display: block; }
+
+/* やじるし：十字。どのめいろも同じ形・同じ大きさ */
+.mz-pad {
+  display: grid; grid-template-columns: repeat(3, 60px); grid-template-rows: repeat(3, 60px);
+  gap: 6px; margin-top: 12px;
+}
+.mz-pad button {
+  border: 3px solid var(--mz-pad-edge); border-radius: 16px;
+  background: var(--mz-pad-bg); color: var(--mz-pad-fg);
+  font-size: 24px; line-height: 1;
+  box-shadow: 0 4px 0 var(--mz-pad-edge);
+  cursor: pointer; touch-action: none;
+}
+.mz-pad button:active, .mz-pad button.pressed { transform: translateY(3px); box-shadow: 0 1px 0 var(--mz-pad-edge); }
+.mz-pad .up { grid-area: 1 / 2; } .mz-pad .left { grid-area: 2 / 1; }
+.mz-pad .right { grid-area: 2 / 3; } .mz-pad .down { grid-area: 3 / 2; }
+.mz-swipe { margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--mz-fg); opacity: 0.7; }
+
+/* ゴール画面 */
+.mz-clear {
+  position: fixed; inset: 0; z-index: 900;
+  display: none; align-items: center; justify-content: center;
+  background: var(--mz-veil);
+  padding: 24px;
+}
+.mz-clear.show { display: flex; animation: mzFade 0.3s ease; }
+@keyframes mzFade { from { opacity: 0; } to { opacity: 1; } }
+.mz-card {
+  width: min(320px, 100%);
+  padding: 22px 18px 20px; border-radius: 24px;
+  background: var(--mz-card-bg); color: var(--mz-card-fg);
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  animation: mzPop 0.35s ease;
+}
+@keyframes mzPop { from { transform: scale(0.8); } to { transform: scale(1); } }
+.mz-card .em { font-size: 52px; line-height: 1.2; display: inline-block; animation: mzHop 0.8s ease-in-out infinite alternate; }
+@keyframes mzHop { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+.mz-card h2 { margin: 4px 0 6px; font-size: 30px; font-weight: 900; color: var(--mz-card-accent); }
+.mz-card p { margin: 4px 0; font-size: 16px; font-weight: 700; }
+.mz-card .row { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.mz-card .row button {
+  min-height: 48px; border: none; border-radius: 16px;
+  font-size: 17px; font-weight: 900; cursor: pointer;
+}
+.mz-card .again { background: var(--mz-card-accent); color: #fff; box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2); }
+.mz-card .change { background: transparent; color: var(--mz-card-fg); border: 2px solid currentColor !important; }

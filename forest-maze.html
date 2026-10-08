@@ -5,260 +5,127 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>もりのめいろ｜あそびのせかい</title>
 <link rel="stylesheet" href="common/asobi.css">
+<link rel="stylesheet" href="common/maze.css">
 <script src="common/asobi.js"></script>
+<script src="common/maze.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
+  :root {
+    --mz-fg: #1d5a00;
+    --mz-title-shadow: 2px 2px 0 #fff;
+    --mz-btn-bg: #fff; --mz-btn-fg: #1d5a00; --mz-btn-edge: #4a8a20;
+    --mz-on-bg: #1d5a00; --mz-on-fg: #fff;
+    --mz-pad-bg: #fff; --mz-pad-fg: #2d6a10; --mz-pad-edge: #4a8a20;
+    --mz-board-edge: #4a8a20;
+    --mz-veil: rgba(29, 90, 0, 0.45);
+    --mz-card-bg: #fffdf2; --mz-card-fg: #1d5a00; --mz-card-accent: #4a9a20;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: #e8f5d0;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
     min-height: 100vh;
-    padding: 62px 12px 24px;
-    font-family: 'Segoe UI', 'Hiragino Maru Gothic Pro', 'BIZ UDPGothic', sans-serif;
-    user-select: none;
-    -webkit-user-select: none;
+    background: linear-gradient(180deg, #d8f2b8 0%, #b8e890 35%, #90cc60 75%, #70aa40 100%);
+    overflow-x: hidden;
   }
-  #game-wrap {
-    background: linear-gradient(180deg, #b8e890 0%, #90cc60 40%, #70aa40 100%);
-    border-radius: 24px;
-    padding: 18px 16px 20px;
-    width: 100%;
-    max-width: 560px; /* iPad でも めいろを大きく */
-    position: relative;
-    overflow: hidden;
-    border: 4px solid #4a8a20;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-  }
-  #title {
-    text-align: center;
-    font-size: 28px;
-    font-weight: 700;
-    color: #1d5a00;
-    text-shadow: 2px 2px 0 #fff;
-    margin-bottom: 10px;
-    letter-spacing: 2px;
-  }
-  #level-btns {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    margin-bottom: 10px;
-  }
-  .lv-btn {
-    padding: 6px 16px;
-    font-size: 14px;
-    font-weight: 700;
-    border: 2px solid #4a8a20;
-    border-radius: 10px;
-    background: #fff;
-    color: #1d5a00;
-    cursor: pointer;
-    touch-action: manipulation;
-  }
-  .lv-btn.active { background: #1d5a00; color: #fff; }
-  #canvas-wrap {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    gap: 10px;
-  }
-  canvas {
-    border-radius: 10px;
-    border: 4px solid #4a8a20;
-    background: #f5edd8;
-    touch-action: none;
-    display: block;
-    max-width: 100%;
-  }
-  #steps-bar {
-    font-size: 15px;
-    color: #1d5a00;
-    text-align: center;
-    font-weight: 600;
-    text-shadow: 1px 1px 0 #fff;
-  }
-  #message {
-    font-size: 20px;
-    font-weight: 700;
-    color: #1d5a00;
-    text-align: center;
-    min-height: 32px;
-    text-shadow: 1px 1px 0 #fff;
-  }
-  #restart-btn {
-    display: none;
-    padding: 10px 28px;
-    font-size: 18px;
-    font-weight: 700;
-    border: 3px solid #4a8a20;
-    border-radius: 14px;
-    background: #fff;
-    color: #1d5a00;
-    cursor: pointer;
-    box-shadow: 0 4px 0 #4a8a20;
-    touch-action: manipulation;
-  }
-  #restart-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #4a8a20; }
-  #controls {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    margin-top: 4px;
-  }
-  .btn-row { display: flex; gap: 10px; }
-  .dir-btn {
-    width: 66px; height: 66px;
-    font-size: 28px;
-    border: 3px solid #4a8a20;
-    border-radius: 16px;
-    background: #fff;
-    color: #1d5a00;
-    cursor: pointer;
-    box-shadow: 0 4px 0 #4a8a20;
-    transition: transform 0.1s, box-shadow 0.1s;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: manipulation;
-  }
-  .dir-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #4a8a20; }
-  .tree-deco {
-    position: absolute;
-    font-size: 36px;
-    opacity: 0.35;
-    pointer-events: none;
-    user-select: none;
-  }
-  #hint {
-    font-size: 12px;
-    color: #2d6a10;
-    text-align: center;
-    margin-top: 6px;
-    opacity: 0.8;
-  }
+  .tree-deco { position: fixed; font-size: 40px; opacity: 0.3; pointer-events: none; z-index: 1; }
+  .mz-board { background: #f5edd8; }
 </style>
 </head>
 <body data-asobi="game">
-<div id="game-wrap">
-  <div class="tree-deco" style="top:6px;left:8px">🌳</div>
-  <div class="tree-deco" style="top:6px;right:8px">🌲</div>
-  <div class="tree-deco" style="bottom:80px;left:6px">🌿</div>
-  <div class="tree-deco" style="bottom:80px;right:6px">🍄</div>
+<div class="tree-deco" style="top:70px;left:8px">🌳</div>
+<div class="tree-deco" style="top:70px;right:8px">🌲</div>
+<div class="tree-deco" style="bottom:20px;left:10px">🌿</div>
+<div class="tree-deco" style="bottom:20px;right:10px">🍄</div>
 
-  <div id="title">🌲 もりのめいろ 🌲</div>
-
-  <div id="level-btns">
-    <button class="lv-btn active" onclick="setLevel(1)">かんたん</button>
-    <button class="lv-btn" onclick="setLevel(2)">ふつう</button>
-    <button class="lv-btn" onclick="setLevel(3)">むずかしい</button>
-  </div>
-
-  <div id="canvas-wrap">
-    <canvas id="maze"></canvas>
-    <div id="steps-bar">あるいたマス：0</div>
-    <div id="message">やじるしで うごかしてね！</div>
-    <button id="restart-btn" onclick="initGame()">もういちど！</button>
-    <div id="controls">
-      <div class="btn-row">
-        <button class="dir-btn" onclick="move(0,-1)">⬆️</button>
-      </div>
-      <div class="btn-row">
-        <button class="dir-btn" onclick="move(-1,0)">⬅️</button>
-        <button class="dir-btn" onclick="move(0,1)">⬇️</button>
-        <button class="dir-btn" onclick="move(1,0)">➡️</button>
-      </div>
-    </div>
-    <div id="hint">📱 スワイプでも うごかせるよ</div>
-  </div>
-</div>
+<main class="mz" id="mz">
+  <div class="mz-board"><canvas id="maze"></canvas></div>
+</main>
 
 <script>
-const LEVELS = { 1: {cols:7, rows:7}, 2: {cols:10, rows:10}, 3: {cols:13, rows:13} };
-let currentLevel = 1;
-let COLS, ROWS, CELL;
-let maze, playerX, playerY, goalX, goalY, won, steps, trail;
+// もりのめいろ：かべは線。リスが おうちを めざす
+let N, CELL, maze, playerX, playerY, steps, trail, solution;
 const canvas = document.getElementById('maze');
 const ctx = canvas.getContext('2d');
 
-function setLevel(lv) {
-  currentLevel = lv;
-  document.querySelectorAll('.lv-btn').forEach((b, i) => b.classList.toggle('active', i + 1 === lv));
-  initGame();
+function newMaze(level) {
+  N = MazeUI.SIZES[level];
+  maze = generateMaze(N);
+  solution = solve();
+  playerX = 0; playerY = 0; steps = 0; trail = [];
+  MazeUI.setSteps(0);
+  fit();
 }
 
-function initGame() {
-  const cfg = LEVELS[currentLevel];
-  COLS = cfg.cols; ROWS = cfg.rows;
-  // 横はばと、やじるしが入る高さ（約420px）の小さいほうに合わせる。スマホは今までどおり 340px まで
-  const maxSize = Math.max(240, Math.min(window.innerWidth >= 600 ? 520 : 340, window.innerWidth - 64, window.innerHeight - 420));
-  CELL = Math.floor(maxSize / Math.max(COLS, ROWS));
-  const W = CELL * COLS, H = CELL * ROWS;
-  canvas.width = W; canvas.height = H;
-  playerX = 0; playerY = 0;
-  goalX = COLS - 1; goalY = ROWS - 1;
-  won = false; steps = 0; trail = [];
-  document.getElementById('message').textContent = 'やじるしで うごかしてね！';
-  document.getElementById('restart-btn').style.display = 'none';
-  document.getElementById('steps-bar').textContent = 'あるいたマス：0';
-  maze = generateMaze(COLS, ROWS);
+// 画面に合わせた大きさで描き直す（くっきり描くため、画面の画素の細かさに合わせる）
+function fit() {
+  CELL = Math.floor(MazeUI.boardSize() / N);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = CELL * N * dpr; canvas.height = CELL * N * dpr;
+  canvas.style.width = CELL * N + 'px'; canvas.style.height = CELL * N + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   draw();
 }
 
-function generateMaze(cols, rows) {
-  let walls = [];
-  for (let y = 0; y < rows; y++) {
-    walls[y] = [];
-    for (let x = 0; x < cols; x++) walls[y][x] = { right: true, down: true };
+function generateMaze(n) {
+  const walls = [];
+  for (let y = 0; y < n; y++) { walls[y] = []; for (let x = 0; x < n; x++) walls[y][x] = { right: true, down: true }; }
+  const visited = Array.from({ length: n }, () => new Array(n).fill(false));
+  const stack = [[0, 0]]; visited[0][0] = true;
+  while (stack.length) {
+    const [x, y] = stack[stack.length - 1];
+    const opts = [[1,0],[-1,0],[0,1],[0,-1]].filter(([dx, dy]) => {
+      const nx = x + dx, ny = y + dy;
+      return nx >= 0 && nx < n && ny >= 0 && ny < n && !visited[ny][nx];
+    });
+    if (!opts.length) { stack.pop(); continue; }
+    const [dx, dy] = opts[Math.floor(Math.random() * opts.length)];
+    const nx = x + dx, ny = y + dy;
+    if (dx === 1) walls[y][x].right = false;
+    else if (dx === -1) walls[y][nx].right = false;
+    else if (dy === 1) walls[y][x].down = false;
+    else walls[ny][x].down = false;
+    visited[ny][nx] = true;
+    stack.push([nx, ny]);
   }
-  let visited = [];
-  for (let y = 0; y < rows; y++) visited[y] = new Array(cols).fill(false);
-  function carve(x, y) {
-    visited[y][x] = true;
-    let dirs = [[1,0],[-1,0],[0,1],[0,-1]].sort(() => Math.random() - 0.5);
-    for (let [dx, dy] of dirs) {
-      let nx = x + dx, ny = y + dy;
-      if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && !visited[ny][nx]) {
-        if (dx === 1) walls[y][x].right = false;
-        else if (dx === -1) walls[y][nx].right = false;
-        else if (dy === 1) walls[y][x].down = false;
-        else if (dy === -1) walls[ny][x].down = false;
-        carve(nx, ny);
-      }
-    }
-  }
-  carve(0, 0);
   return walls;
 }
 
 function canMove(x, y, dx, dy) {
-  if (dx === 1)  return x < COLS-1 && !maze[y][x].right;
-  if (dx === -1) return x > 0      && !maze[y][x-1].right;
-  if (dy === 1)  return y < ROWS-1 && !maze[y][x].down;
-  if (dy === -1) return y > 0      && !maze[y-1][x].down;
+  if (dx === 1)  return x < N - 1 && !maze[y][x].right;
+  if (dx === -1) return x > 0     && !maze[y][x - 1].right;
+  if (dy === 1)  return y < N - 1 && !maze[y][x].down;
+  if (dy === -1) return y > 0     && !maze[y - 1][x].down;
   return false;
 }
 
+// ヒント用：スタートからゴールまでの道
+function solve() {
+  const prev = Array.from({ length: N }, () => new Array(N).fill(null));
+  const q = [[0, 0]]; prev[0][0] = [-1, -1];
+  while (q.length) {
+    const [x, y] = q.shift();
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      if (!canMove(x, y, dx, dy)) continue;
+      const nx = x + dx, ny = y + dy;
+      if (prev[ny][nx]) continue;
+      prev[ny][nx] = [x, y]; q.push([nx, ny]);
+    }
+  }
+  const path = []; let c = [N - 1, N - 1];
+  while (c[0] !== -1) { path.push(c); c = prev[c[1]][c[0]]; }
+  return path;
+}
+
 function move(dx, dy) {
-  if (won) return;
-  if (!canMove(playerX, playerY, dx, dy)) { shakeCanvas(); return; }
+  if (!canMove(playerX, playerY, dx, dy)) { shake(); return false; }
   trail.push([playerX, playerY]);
   if (trail.length > 100) trail.shift();
   playerX += dx; playerY += dy;
-  steps++;
-  document.getElementById('steps-bar').textContent = 'あるいたマス：' + steps;
+  MazeUI.setSteps(++steps);
   draw();
-  if (playerX === goalX && playerY === goalY) {
-    won = true;
-    document.getElementById('message').textContent = '🎉 やったね！ゴール！ 🎉';
-    Asobi.sfx('clear');
-    document.getElementById('restart-btn').style.display = 'inline-block';
-    drawWin();
-  }
+  if (playerX === N - 1 && playerY === N - 1) MazeUI.win();
+  return true;
 }
 
-function shakeCanvas() {
+function shake() {
   canvas.style.transition = 'transform 0.05s';
   canvas.style.transform = 'translateX(-5px)';
   setTimeout(() => { canvas.style.transform = 'translateX(5px)'; }, 60);
@@ -266,91 +133,66 @@ function shakeCanvas() {
 }
 
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const S = CELL * N;
   ctx.fillStyle = '#f5edd8';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, S, S);
 
+  if (MazeUI.hintOn()) {
+    ctx.fillStyle = 'rgba(255, 200, 60, 0.45)';
+    for (const [x, y] of solution) ctx.fillRect(x * CELL + 3, y * CELL + 3, CELL - 6, CELL - 6);
+  }
   for (let i = 0; i < trail.length; i++) {
-    let [tx, ty] = trail[i];
-    let alpha = (i / trail.length) * 0.25;
-    ctx.fillStyle = `rgba(100,180,60,${alpha})`;
-    ctx.fillRect(tx*CELL+1, ty*CELL+1, CELL-2, CELL-2);
+    const [tx, ty] = trail[i];
+    ctx.fillStyle = `rgba(100,180,60,${(i / trail.length) * 0.3})`;
+    ctx.fillRect(tx * CELL + 1, ty * CELL + 1, CELL - 2, CELL - 2);
   }
 
-  ctx.fillStyle = '#ffe97a';
-  roundRect(ctx, goalX*CELL+2, goalY*CELL+2, CELL-4, CELL-4, 6); ctx.fill();
-  ctx.fillStyle = '#d4f0a0';
-  roundRect(ctx, 2, 2, CELL-4, CELL-4, 6); ctx.fill();
+  ctx.fillStyle = '#ffe97a'; roundRect((N - 1) * CELL + 2, (N - 1) * CELL + 2, CELL - 4, CELL - 4, 6); ctx.fill();
+  ctx.fillStyle = '#d4f0a0'; roundRect(2, 2, CELL - 4, CELL - 4, 6); ctx.fill();
 
   ctx.strokeStyle = '#4a8a20';
-  ctx.lineWidth = currentLevel === 3 ? 2.5 : 3;
+  ctx.lineWidth = Math.max(2, Math.min(3.5, CELL / 10));
   ctx.lineCap = 'round';
-  ctx.strokeRect(1, 1, canvas.width-2, canvas.height-2);
-
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      let px = x*CELL, py = y*CELL;
-      if (maze[y][x].right && x < COLS-1) {
-        ctx.beginPath(); ctx.moveTo(px+CELL, py+2); ctx.lineTo(px+CELL, py+CELL-2); ctx.stroke();
-      }
-      if (maze[y][x].down && y < ROWS-1) {
-        ctx.beginPath(); ctx.moveTo(px+2, py+CELL); ctx.lineTo(px+CELL-2, py+CELL); ctx.stroke();
-      }
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      const px = x * CELL, py = y * CELL;
+      if (maze[y][x].right && x < N - 1) { ctx.beginPath(); ctx.moveTo(px + CELL, py); ctx.lineTo(px + CELL, py + CELL); ctx.stroke(); }
+      if (maze[y][x].down && y < N - 1)  { ctx.beginPath(); ctx.moveTo(px, py + CELL); ctx.lineTo(px + CELL, py + CELL); ctx.stroke(); }
     }
   }
 
-  let em = Math.max(10, CELL * 0.62);
-  ctx.font = `${em}px serif`;
+  ctx.font = `${Math.max(10, CELL * 0.62)}px serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('🏠', goalX*CELL+CELL/2, goalY*CELL+CELL/2+1);
-  ctx.fillText('🐿️', playerX*CELL+CELL/2, playerY*CELL+CELL/2+1);
+  ctx.fillText('🏠', (N - 1) * CELL + CELL / 2, (N - 1) * CELL + CELL / 2 + 1);
+  ctx.fillText('🐿️', playerX * CELL + CELL / 2, playerY * CELL + CELL / 2 + 1);
 }
 
-function drawWin() {
-  ctx.fillStyle = 'rgba(255,255,100,0.35)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  let em = Math.max(24, CELL);
-  ctx.font = `${em}px serif`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('🎉', canvas.width/2, canvas.height/2);
-}
-
-function roundRect(ctx, x, y, w, h, r) {
+function roundRect(x, y, w, h, r) {
   ctx.beginPath();
-  ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y);
-  ctx.quadraticCurveTo(x+w, y, x+w, y+r); ctx.lineTo(x+w, y+h-r);
-  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h); ctx.lineTo(x+r, y+h);
-  ctx.quadraticCurveTo(x, y+h, x, y+h-r); ctx.lineTo(x, y+r);
-  ctx.quadraticCurveTo(x, y, x+r, y); ctx.closePath();
+  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
 }
 
-// キーボード操作
-document.addEventListener('keydown', e => {
-  if (e.key==='ArrowUp'   || e.key==='w') { e.preventDefault(); move(0,-1); }
-  if (e.key==='ArrowDown' || e.key==='s') { e.preventDefault(); move(0,1); }
-  if (e.key==='ArrowLeft' || e.key==='a') { e.preventDefault(); move(-1,0); }
-  if (e.key==='ArrowRight'|| e.key==='d') { e.preventDefault(); move(1,0); }
+// もりの おんがく：ゆっくり さんぽする かんじ（ドレミソラだけ）
+const music = MazeUI.makeMusic({
+  bpm: 96, wave: 'triangle', vol: 0.12,
+  melody: [[64,1],[67,1],[69,1],[67,1], [64,1],[62,1],[60,2], [64,1],[67,1],[69,1],[72,1], [69,1],[67,1],[64,2],
+           [62,1],[64,1],[67,1],[64,1], [62,1],[60,1],[62,2], [64,1],[62,1],[60,1],[57,1], [60,4]],
+  bass:   [[48,4],[43,4],[45,4],[43,4],[50,4],[43,4],[45,4],[48,4]],
 });
 
-// スワイプ操作
-let touchStartX = 0, touchStartY = 0;
-canvas.addEventListener('touchstart', e => {
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-  e.preventDefault();
-}, { passive: false });
-
-canvas.addEventListener('touchend', e => {
-  const dx = e.changedTouches[0].clientX - touchStartX;
-  const dy = e.changedTouches[0].clientY - touchStartY;
-  const absDx = Math.abs(dx), absDy = Math.abs(dy);
-  if (Math.max(absDx, absDy) < 10) return;
-  if (absDx > absDy) move(dx > 0 ? 1 : -1, 0);
-  else move(0, dy > 0 ? 1 : -1);
-  e.preventDefault();
-}, { passive: false });
-
-initGame();
+MazeUI.mount({
+  title: '🌲 もりのめいろ 🌲',
+  onNew: newMaze,
+  onMove: move,
+  onHint: () => draw(),
+  onResize: fit,
+  music,
+  clear: { emoji: '🐿️', text: 'おうちに ついたよ！' },
+});
 </script>
 </body>
 </html>
