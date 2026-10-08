@@ -270,22 +270,6 @@
     margin-bottom: 12px;
   }
 
-  /* ===== BACK BUTTON ===== */
-  .btn-back {
-    background: none;
-    border: 2px solid var(--cat-light);
-    border-radius: 12px;
-    padding: 8px 18px;
-    color: var(--soft-brown);
-    font-family: 'M PLUS Rounded 1c', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 8px;
-  }
-  .btn-back:hover { background: var(--cat-light); }
-
   /* ===== GAME SCREEN ===== */
   .game-area {
     width: 100%;
@@ -757,7 +741,6 @@
   </div>
 
   <div id="level-grid" class="level-grid"></div>
-  <button class="btn-back" onclick="showScreen('title')">← もどる</button>
 </div>
 
 <!-- ===== GAME SCREEN ===== -->
@@ -767,7 +750,6 @@
     <div class="score-row">
       <div class="score-box">もんだい <span id="q-num">1</span>/<span id="q-total">10</span></div>
       <div class="score-box">⭐ <span id="current-score">0</span></div>
-      <button class="btn-back" style="margin:0;padding:6px 12px;font-size:0.8rem;" onclick="showScreen('title')">やめる</button>
     </div>
 
     <!-- Progress -->
@@ -937,6 +919,8 @@ function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   window.scrollTo(0, 0);
+  // 左上のボタン：さいしょの画面では「ホームへ」、ゲーム中・けっかは レベルえらびへ、レベルえらびは さいしょへ
+  Asobi.setBack(name === 'title' ? null : (name === 'level' ? () => showScreen('title') : () => showScreen('level')));
 }
 
 // ===== COURSE SELECTION =====

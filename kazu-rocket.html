@@ -69,12 +69,6 @@ body {
 .cx{background:linear-gradient(145deg,#880e4f,#560027);}
 
 /* ── レベル選択 ── */
-.back-btn {
-  align-self:flex-start; background:rgba(255,255,255,.12);
-  border:2px solid rgba(255,255,255,.25); border-radius:14px; padding:8px 20px;
-  color:#fff; font-family:'Nunito',sans-serif; font-size:1rem; font-weight:700;
-  cursor:pointer; margin-bottom:16px;
-}
 .course-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
 .course-header .hicon { font-size:2.4rem; }
 .course-header .hinfo h2 { font-size:1.4rem; color:#fff; font-weight:900; }
@@ -139,10 +133,6 @@ body {
 .progress-fill  { height:100%; background:linear-gradient(90deg,#ffd740,#ff6f00);
   border-radius:10px; transition:width .5s ease; }
 
-.bottom-btns { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; justify-content:center; }
-.menu-btn  { background:rgba(255,255,255,.1); border:2px solid rgba(255,255,255,.2);
-  border-radius:12px; padding:7px 18px; color:#fff;
-  font-family:'Nunito',sans-serif; font-size:.9rem; font-weight:700; cursor:pointer; }
 
 /* フィードバック */
 .feedback { position:fixed; top:40%; left:50%; transform:translate(-50%,-50%);
@@ -223,7 +213,6 @@ body {
 
 <!-- レベル選択 -->
 <div class="screen" id="scrLevel">
-  <button class="back-btn" onclick="showScreen('scrCourse')">← もどる</button>
   <div class="course-header" id="courseHeader"></div>
   <div class="level-grid" id="levelGrid"></div>
 </div>
@@ -251,9 +240,6 @@ body {
   <div class="rocket-area">
     <div class="rocket-game" id="rocket">🚀</div>
     <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-  </div>
-  <div class="bottom-btns">
-    <button class="menu-btn" onclick="goToMenu()">📋 メニューへ</button>
   </div>
 </div>
 
@@ -431,6 +417,8 @@ let pendingUnlock = null; // 解放したロケット
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  // 左上のボタン：コースえらびでは「ホームへ」、それ以外は「← もどる」（コースえらびへ）
+  Asobi.setBack(id === 'scrCourse' ? null : (id === 'scrGame' ? goToMenu : () => showScreen('scrCourse')));
 }
 
 function goToMenu() {

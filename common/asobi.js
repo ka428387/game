@@ -86,6 +86,14 @@
   }
 
   // ── 左上「ホームへ」・右上「おと」 ──
+  // ゲームの中の画面では、左上を「← もどる」に変えられる（Asobi.setBack(関数)）。null でホームへにもどす。
+  // 左上のボタンはいつも1つだけ。ゲームの中に別の「もどる」ボタンを置かない
+  var homeBtn = null, backFn = null;
+  function setBack(fn) {
+    backFn = fn || null;
+    if (!homeBtn) return;
+    homeBtn.textContent = backFn ? '← もどる' : '🏠 ホームへ';
+  }
   function place(btn, slotName) {
     var slot = document.querySelector('[data-asobi-slot="' + slotName + '"]');
     if (slot) { btn.classList.add('in-slot'); slot.appendChild(btn); }
@@ -97,7 +105,11 @@
     var home = document.createElement('a');
     home.className = 'asobi-btn asobi-home';
     home.href = 'index.html';
-    home.textContent = '🏠 ホームへ';
+    home.addEventListener('click', function (e) {
+      if (backFn) { e.preventDefault(); backFn(); }
+    });
+    homeBtn = home;
+    setBack(backFn);
     place(home, 'home');
 
     var snd = document.createElement('button');
@@ -117,6 +129,7 @@
 
   window.Asobi = {
     sfx: sfx,
+    setBack: setBack,
     isSoundOn: function () { return soundOn; }
   };
 })();
