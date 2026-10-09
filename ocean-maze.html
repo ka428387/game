@@ -10,28 +10,20 @@
 <script src="common/maze.js"></script>
 <style>
   :root {
-    --mz-fg: #7ee8ff;
-    --mz-title-shadow: 0 0 14px rgba(100,220,255,0.7);
-    --mz-btn-bg: #0d2a48; --mz-btn-fg: #7ee8ff; --mz-btn-edge: #1a6fa8;
-    --mz-on-bg: #1a7aad; --mz-on-fg: #fff;
-    --mz-pad-bg: #0d2a48; --mz-pad-fg: #7ee8ff; --mz-pad-edge: #1a6fa8;
-    --mz-board-edge: #1a6fa8;
-    --mz-veil: rgba(2,12,27,0.75);
-    --mz-card-bg: #0d2a48; --mz-card-fg: #cdefff; --mz-card-accent: #ffd166;
+    --mz-fg: #165a8c;
+    --mz-title-shadow: 0 2px 0 #fff, 0 0 10px rgba(255,255,255,0.9);
+    --mz-btn-bg: #fff; --mz-btn-fg: #1a6fa8; --mz-btn-edge: #4aa6e0;
+    --mz-on-bg: #2b8bd0; --mz-on-fg: #fff;
+    --mz-pad-bg: #fff; --mz-pad-fg: #1a7ac0; --mz-pad-edge: #4aa6e0;
+    --mz-board-edge: #2b8bd0;
+    --mz-veil: rgba(20,80,130,0.45);
+    --mz-card-bg: #f2fbff; --mz-card-fg: #165a8c; --mz-card-accent: #f08a3c;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     min-height: 100vh;
-    background: #020c1b;
+    background: #8fd8f5 url('images/bg/umi.jpg') center / cover no-repeat fixed;
     overflow-x: hidden;
-  }
-  /* 海の背景 */
-  body::before {
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background:
-      radial-gradient(ellipse at 20% 50%, rgba(13,93,155,0.3) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 20%, rgba(0,120,160,0.2) 0%, transparent 50%),
-      linear-gradient(180deg, #020c1b 0%, #041829 40%, #062035 100%);
   }
   .bubble {
     position: fixed; border-radius: 50%; pointer-events: none; z-index: 1;
@@ -45,7 +37,7 @@
     90%  { opacity: 0.3; }
     100% { transform: translateY(-100px) translateX(30px) scale(0.8); opacity: 0; }
   }
-  .mz-board { box-shadow: 0 0 30px rgba(0,100,180,0.4); }
+  .mz-board { box-shadow: 0 6px 18px rgba(20,90,150,0.25); }
 </style>
 </head>
 <body data-asobi="game">
@@ -59,6 +51,7 @@
 let N, CELL, grid, playerX, playerY, steps, visited, solved;
 const canvas = document.getElementById('maze');
 const ctx = canvas.getContext('2d');
+const IMG = { player: MazeUI.img('images/chara/sakana.png', () => drawMaze()), goal: MazeUI.img('images/goal/hitode.png', () => drawMaze()) };
 
 function newMaze(level) {
   N = MazeUI.SIZES[level];
@@ -140,60 +133,33 @@ function move(dx, dy) {
 function drawMaze() {
   const W = N * CELL;
   const bg = ctx.createLinearGradient(0, 0, 0, W);
-  bg.addColorStop(0, '#041525'); bg.addColorStop(1, '#062035');
+  bg.addColorStop(0, '#e6f7ff'); bg.addColorStop(1, '#c9ecfb');
   ctx.fillStyle = bg; ctx.fillRect(0, 0, W, W);
 
-  // うすい海底のます目
-  ctx.strokeStyle = 'rgba(30,80,120,0.3)'; ctx.lineWidth = 0.5;
-  for (let i = 0; i <= N; i++) {
-    ctx.beginPath(); ctx.moveTo(0, i * CELL); ctx.lineTo(W, i * CELL); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(i * CELL, 0); ctx.lineTo(i * CELL, W); ctx.stroke();
-  }
-
   if (MazeUI.hintOn()) {
-    ctx.fillStyle = 'rgba(255,220,80,0.3)';
+    ctx.fillStyle = 'rgba(255,190,60,0.45)';
     for (const [hx, hy] of solved) ctx.fillRect(hx * CELL + 3, hy * CELL + 3, CELL - 6, CELL - 6);
   }
-
-  // 通った道（光る）
+  // 通った道（あわい水色）
+  ctx.fillStyle = 'rgba(80,180,240,0.22)';
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-    if (!visited[y][x]) continue;
-    const g = ctx.createRadialGradient(x * CELL + CELL / 2, y * CELL + CELL / 2, 0, x * CELL + CELL / 2, y * CELL + CELL / 2, CELL * 0.7);
-    g.addColorStop(0, 'rgba(80,200,255,0.28)'); g.addColorStop(1, 'rgba(30,120,200,0.05)');
-    ctx.fillStyle = g; ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+    if (visited[y][x]) ctx.fillRect(x * CELL + 1, y * CELL + 1, CELL - 2, CELL - 2);
   }
+  // スタート・ゴールのます
+  ctx.fillStyle = 'rgba(120,220,170,0.35)'; ctx.fillRect(0, 0, CELL, CELL);
+  ctx.fillStyle = 'rgba(255,200,120,0.45)'; ctx.fillRect((N - 1) * CELL, (N - 1) * CELL, CELL, CELL);
 
-  drawCell(0, 0, 'rgba(100,255,150,0.25)', '🐬');
-  drawCell(N - 1, N - 1, 'rgba(255,180,50,0.3)', '⭐');
-
-  // かべ（光る線）
-  ctx.save();
+  // かべ（青い線）
   ctx.lineCap = 'round';
-  ctx.shadowColor = 'rgba(80,180,255,0.7)'; ctx.shadowBlur = 6;
-  ctx.strokeStyle = '#3aa0e0'; ctx.lineWidth = Math.max(2, Math.min(3.5, CELL / 10));
+  ctx.strokeStyle = '#2b8bd0'; ctx.lineWidth = Math.max(2, Math.min(3.5, CELL / 10));
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
     const cx = x * CELL, cy = y * CELL;
     if (grid[y][x].r && x < N - 1) { ctx.beginPath(); ctx.moveTo(cx + CELL, cy); ctx.lineTo(cx + CELL, cy + CELL); ctx.stroke(); }
     if (grid[y][x].b && y < N - 1) { ctx.beginPath(); ctx.moveTo(cx, cy + CELL); ctx.lineTo(cx + CELL, cy + CELL); ctx.stroke(); }
   }
-  ctx.restore();
 
-  // さかな
-  const px = playerX * CELL + CELL / 2, py = playerY * CELL + CELL / 2;
-  const glow = ctx.createRadialGradient(px, py, 0, px, py, CELL * 0.8);
-  glow.addColorStop(0, 'rgba(100,220,255,0.5)'); glow.addColorStop(1, 'rgba(0,100,200,0)');
-  ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(px, py, CELL * 0.8, 0, Math.PI * 2); ctx.fill();
-  ctx.font = `${Math.floor(CELL * 0.62)}px serif`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('🐠', px, py);
-}
-
-function drawCell(x, y, color, emoji) {
-  ctx.fillStyle = color;
-  ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
-  ctx.font = `${Math.floor(CELL * 0.55)}px serif`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(emoji, x * CELL + CELL / 2, y * CELL + CELL / 2);
+  MazeUI.drawImg(ctx, IMG.goal, (N - 1) * CELL + CELL / 2, (N - 1) * CELL + CELL / 2, CELL * 0.9);
+  MazeUI.drawImg(ctx, IMG.player, playerX * CELL + CELL / 2, playerY * CELL + CELL / 2, CELL * 0.95);
 }
 
 // ======== うみの おんがく：ゆっくりした和音と、波の音 ========
@@ -278,7 +244,7 @@ MazeUI.mount({
   onHint: () => drawMaze(),
   onResize: fit,
   music,
-  clear: { emoji: '🐠', text: 'しんかいの なぞを といたよ！' },
+  clear: { img: 'images/chara/sakana.png', text: 'ひとでの ところまで およいだよ！' },
 });
 </script>
 </body>

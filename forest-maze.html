@@ -11,7 +11,7 @@
 <style>
   :root {
     --mz-fg: #1d5a00;
-    --mz-title-shadow: 2px 2px 0 #fff;
+    --mz-title-shadow: 0 2px 0 #fff, 0 0 10px rgba(255,255,255,0.9);
     --mz-btn-bg: #fff; --mz-btn-fg: #1d5a00; --mz-btn-edge: #4a8a20;
     --mz-on-bg: #1d5a00; --mz-on-fg: #fff;
     --mz-pad-bg: #fff; --mz-pad-fg: #2d6a10; --mz-pad-edge: #4a8a20;
@@ -22,18 +22,13 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     min-height: 100vh;
-    background: linear-gradient(180deg, #d8f2b8 0%, #b8e890 35%, #90cc60 75%, #70aa40 100%);
+    background: #e6f2a8 url('images/bg/mori.jpg') center / cover no-repeat fixed;
     overflow-x: hidden;
   }
-  .tree-deco { position: fixed; font-size: 40px; opacity: 0.3; pointer-events: none; z-index: 1; }
   .mz-board { background: #f5edd8; }
 </style>
 </head>
 <body data-asobi="game">
-<div class="tree-deco" style="top:70px;left:8px">🌳</div>
-<div class="tree-deco" style="top:70px;right:8px">🌲</div>
-<div class="tree-deco" style="bottom:20px;left:10px">🌿</div>
-<div class="tree-deco" style="bottom:20px;right:10px">🍄</div>
 
 <main class="mz" id="mz">
   <div class="mz-board"><canvas id="maze"></canvas></div>
@@ -44,6 +39,7 @@
 let N, CELL, maze, playerX, playerY, steps, trail, solution;
 const canvas = document.getElementById('maze');
 const ctx = canvas.getContext('2d');
+const IMG = { player: MazeUI.img('images/chara/risu.png', () => draw()), goal: MazeUI.img('images/goal/ouchi.png', () => draw()) };
 
 function newMaze(level) {
   N = MazeUI.SIZES[level];
@@ -161,10 +157,8 @@ function draw() {
     }
   }
 
-  ctx.font = `${Math.max(10, CELL * 0.62)}px serif`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('🏠', (N - 1) * CELL + CELL / 2, (N - 1) * CELL + CELL / 2 + 1);
-  ctx.fillText('🐿️', playerX * CELL + CELL / 2, playerY * CELL + CELL / 2 + 1);
+  MazeUI.drawImg(ctx, IMG.goal, (N - 1) * CELL + CELL / 2, (N - 1) * CELL + CELL / 2, CELL * 0.92);
+  MazeUI.drawImg(ctx, IMG.player, playerX * CELL + CELL / 2, playerY * CELL + CELL / 2, CELL * 0.95);
 }
 
 function roundRect(x, y, w, h, r) {
@@ -191,7 +185,7 @@ MazeUI.mount({
   onHint: () => draw(),
   onResize: fit,
   music,
-  clear: { emoji: '🐿️', text: 'おうちに ついたよ！' },
+  clear: { img: 'images/chara/risu.png', text: 'おうちに ついたよ！' },
 });
 </script>
 </body>

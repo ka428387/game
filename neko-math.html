@@ -30,26 +30,13 @@
 
   body {
     font-family: 'M PLUS Rounded 1c', sans-serif;
-    background: var(--cream);
+    background: #fbefd6 url('images/bg/neko.jpg') center / cover no-repeat fixed;
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
     padding-top: 52px;
   }
 
-  /* Paw print background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      radial-gradient(ellipse 8px 6px at 20px 20px, rgba(200,150,100,0.08) 100%, transparent 100%),
-      radial-gradient(circle 3px at 12px 10px, rgba(200,150,100,0.06) 100%, transparent 100%),
-      radial-gradient(circle 3px at 28px 10px, rgba(200,150,100,0.06) 100%, transparent 100%);
-    background-size: 80px 80px;
-    pointer-events: none;
-    z-index: 0;
-  }
 
   /* ===== SCREENS ===== */
   .screen {
@@ -97,6 +84,7 @@
 
   /* Big hero cat */
   .hero-cat {
+    display: block;
     width: 160px;
     height: 160px;
     margin: 12px auto;
@@ -647,48 +635,11 @@
 <!-- ===== TITLE SCREEN ===== -->
 <div id="screen-title" class="screen active">
   <div class="game-header">
-    <div class="game-title">🐱 ねこさんすうランド</div>
+    <div class="game-title">ねこさんすうランド</div>
     <div class="game-subtitle">ねこといっしょにさんすうをたのしもう！</div>
   </div>
 
-  <svg class="hero-cat" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
-    <!-- Body -->
-    <ellipse cx="80" cy="105" rx="45" ry="42" fill="#FFCBA4"/>
-    <!-- Head -->
-    <circle cx="80" cy="68" r="36" fill="#FFCBA4"/>
-    <!-- Ear left -->
-    <polygon points="44,42 56,18 68,46" fill="#FFCBA4"/>
-    <polygon points="50,40 56,23 64,44" fill="#FFB0C8"/>
-    <!-- Ear right -->
-    <polygon points="92,46 104,18 116,42" fill="#FFCBA4"/>
-    <polygon points="96,44 104,23 110,40" fill="#FFB0C8"/>
-    <!-- Face -->
-    <!-- Eyes -->
-    <ellipse cx="67" cy="65" rx="7" ry="8" fill="#4A3728"/>
-    <ellipse cx="93" cy="65" rx="7" ry="8" fill="#4A3728"/>
-    <circle cx="69" cy="63" r="2.5" fill="white"/>
-    <circle cx="95" cy="63" r="2.5" fill="white"/>
-    <!-- Nose -->
-    <ellipse cx="80" cy="76" rx="4" ry="3" fill="#FF9DB5"/>
-    <!-- Mouth -->
-    <path d="M76 79 Q80 84 84 79" stroke="#C87060" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-    <!-- Whiskers left -->
-    <line x1="48" y1="74" x2="72" y2="77" stroke="#C87060" stroke-width="1.2" opacity="0.5"/>
-    <line x1="46" y1="79" x2="72" y2="79" stroke="#C87060" stroke-width="1.2" opacity="0.5"/>
-    <!-- Whiskers right -->
-    <line x1="88" y1="77" x2="112" y2="74" stroke="#C87060" stroke-width="1.2" opacity="0.5"/>
-    <line x1="88" y1="79" x2="114" y2="79" stroke="#C87060" stroke-width="1.2" opacity="0.5"/>
-    <!-- Belly spot -->
-    <ellipse cx="80" cy="110" rx="20" ry="18" fill="#FFE4D4"/>
-    <!-- Paws -->
-    <ellipse cx="55" cy="142" rx="14" ry="10" fill="#FFCBA4"/>
-    <ellipse cx="105" cy="142" rx="14" ry="10" fill="#FFCBA4"/>
-    <!-- Tail -->
-    <path d="M122 115 Q150 100 148 130 Q146 148 130 145" stroke="#FFCBA4" stroke-width="14" fill="none" stroke-linecap="round"/>
-    <!-- Collar -->
-    <rect x="54" y="94" width="52" height="10" rx="5" fill="#FF8C42"/>
-    <circle cx="80" cy="99" r="4" fill="#FFD166"/>
-  </svg>
+  <img class="hero-cat" src="images/chara/neko.png" alt="">
 
   <p class="section-title" style="margin-top:0;">コースをえらんでね！</p>
 

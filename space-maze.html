@@ -22,9 +22,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     min-height: 100vh;
-    background:
-      radial-gradient(1200px 600px at 50% -10%, #36256e 0%, transparent 60%),
-      linear-gradient(180deg, #0b0b2b 0%, #1b1147 50%, #2a1a5e 100%);
+    background: #4b3fa8 url('images/bg/uchu.jpg') center / cover no-repeat fixed;
     overflow-x: hidden;
   }
   .mz-board { box-shadow: 0 0 26px rgba(107,70,224,.5); background: #07071f; }
@@ -43,6 +41,8 @@
   "use strict";
   const cv = document.getElementById('cv');
   const ctx = cv.getContext('2d');
+  const IMG = { rocket: MazeUI.img('images/chara/roketto.png'), star: MazeUI.img('images/item/hoshi.png'), goal: MazeUI.img('images/goal/wakusei.png') };
+  let heading = Math.PI / 2; // ロケットの向き（はじめは右向き）
 
   const STARS = [3, 5, 7]; // むずかしさごとの ⭐の数
   let CELLS = 6, STAR_COUNT = 3, R = 0;
@@ -141,6 +141,7 @@
     player.r = nr; player.c = nc;
     animTo = { x: player.c, y: player.r };
     animating = true; animStart = performance.now();
+    heading = Math.atan2(dy, dx) + Math.PI / 2; // 絵のロケットは上向きなので 90° たす
     MazeUI.setSteps(++steps);
     for (let i = 0; i < 5; i++) {
       particles.push({ x: disp.x, y: disp.y, vx: -dx * 0.04 + (Math.random() - .5) * 0.03, vy: -dy * 0.04 + (Math.random() - .5) * 0.03, life: 1, gold: false });
@@ -189,12 +190,6 @@
     g.addColorStop(0, 'rgba(' + rgb + ',' + alpha + ')'); g.addColorStop(1, 'rgba(' + rgb + ',0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
   }
-  // 絵文字を必ず本来の色で描く（影ぼかしOFF・塗り色リセット）
-  function glyph(em, cx, cy, fpx) {
-    ctx.shadowColor = 'rgba(0,0,0,0)'; ctx.shadowBlur = 0; ctx.fillStyle = '#ffffff';
-    ctx.font = fpx + 'px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(em, cx, cy);
-  }
 
   function draw(t) {
     const w = size, h = size;
@@ -234,7 +229,7 @@
       const cx = c * cell + cell / 2, cy = r * cell + cell / 2;
       ctx.save();
       halo(cx, cy, cell * (0.55 + 0.12 * pulse), '255,213,79', 0.55);
-      glyph('⭐', cx, cy + cell * 0.04, Math.floor(cell * 0.78));
+      MazeUI.drawImg(ctx, IMG.star, cx, cy, cell * 0.9);
       ctx.restore();
     });
 
@@ -243,7 +238,7 @@
       const open = starsGot >= STAR_COUNT;
       ctx.save();
       halo(gx, gy, cell * (0.7 + 0.15 * pulse), open ? '110,255,166' : '110,231,255', 0.6);
-      glyph('🪐', gx, gy + cell * 0.04, Math.floor(cell * 0.88));
+      MazeUI.drawImg(ctx, IMG.goal, gx, gy, cell * 1.05);
       ctx.restore();
     }
 
@@ -269,7 +264,8 @@
       const px = disp.x * cell + cell / 2, py = disp.y * cell + cell / 2;
       ctx.save();
       halo(px, py, cell * 0.62, '110,231,255', 0.5);
-      glyph('🚀', px, py + cell * 0.04, Math.floor(cell * 0.86));
+      ctx.translate(px, py); ctx.rotate(heading);
+      MazeUI.drawImg(ctx, IMG.rocket, 0, 0, cell * 1.0);
       ctx.restore();
     }
 
@@ -315,7 +311,7 @@
     onHint: () => {},           // まいかい描き直しているので、すぐ反映される
     onResize: fit,
     music,
-    clear: { emoji: '🚀', text: 'わくせいに とうちゃく！' },
+    clear: { img: 'images/chara/roketto.png', text: 'わくせいに とうちゃく！' },
   });
   requestAnimationFrame(draw);
 })();

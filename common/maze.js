@@ -128,7 +128,10 @@
     // ゴール画面
     el.clear = make('div', 'mz-clear');
     var card = make('div', 'mz-card');
-    card.appendChild(make('div', 'em', c.clear.emoji));
+    var em = make('div', 'em');
+    if (c.clear.img) { var im = make('img'); im.src = c.clear.img; im.alt = ''; em.appendChild(im); }
+    else em.textContent = c.clear.emoji;
+    card.appendChild(em);
     card.appendChild(make('h2', '', '🎉 ゴール！'));
     card.appendChild(make('p', '', c.clear.text));
     el.clearSteps = make('p', '');
@@ -251,6 +254,13 @@
       Asobi.sfx('clear');
       setTimeout(function () { el.clear.classList.add('show'); }, 350);
     },
-    makeMusic: makeMusic
+    makeMusic: makeMusic,
+    // 絵（キャラ・ゴール）を読みこむ。読みこめたら onload で描き直す
+    img: function (src, onload) { var im = new Image(); im.onload = onload; im.src = src; return im; },
+    // 絵を (cx, cy) を中心に、size の正方形に描く。まだ読みこめていなければ何もしない
+    drawImg: function (ctx, im, cx, cy, size) {
+      if (!im || !im.complete || !im.naturalWidth) return;
+      ctx.drawImage(im, cx - size / 2, cy - size / 2, size, size);
+    }
   };
 })();

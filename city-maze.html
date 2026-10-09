@@ -11,7 +11,7 @@
 <style>
   :root {
     --mz-fg: #431407;
-    --mz-title-shadow: 2px 2px 0 #fbbf24;
+    --mz-title-shadow: 0 2px 0 #fff, 0 0 10px rgba(255,255,255,0.9);
     --mz-btn-bg: #fff; --mz-btn-fg: #78350f; --mz-btn-edge: #f97316;
     --mz-on-bg: #f97316; --mz-on-fg: #fff;
     --mz-pad-bg: #fff; --mz-pad-fg: #c2410c; --mz-pad-edge: #f97316;
@@ -22,22 +22,9 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     min-height: 100vh;
-    background: linear-gradient(180deg, #ffe082 0%, #fff8e1 40%, #fffde7 100%);
+    background: #bfe6fb url('images/bg/machi.jpg') center / cover no-repeat fixed;
     overflow-x: hidden;
   }
-
-  /* 空の雲 */
-  .cloud { position: fixed; top: 0; width: 100%; height: 80px; pointer-events: none; z-index: 0; overflow: hidden; }
-  .cloud-shape { position: absolute; background: rgba(255,255,255,0.7); border-radius: 50px; animation: floatCloud linear infinite; }
-  @keyframes floatCloud { from { transform: translateX(-200px); } to { transform: translateX(110vw); } }
-
-  /* うしろのビル */
-  .buildings-bg {
-    position: fixed; bottom: 0; left: 0; right: 0; height: 120px;
-    pointer-events: none; z-index: 0;
-    display: flex; align-items: flex-end; gap: 3px; padding: 0 10px; opacity: 0.25;
-  }
-  .bld { border-radius: 4px 4px 0 0; flex-shrink: 0; }
 
   /* 下を走る車。絵文字は左向きなので、左右反転（scaleX(-1)）して右へ走らせる */
   @keyframes carMove {
@@ -49,8 +36,6 @@
 </head>
 <body data-asobi="game">
 
-<div class="cloud" id="cloudLayer"></div>
-<div class="buildings-bg" id="buildingsBg"></div>
 
 <main class="mz" id="mz">
   <div class="mz-board"><canvas id="maze"></canvas></div>
@@ -61,6 +46,7 @@
 let G, CELL, maze, visited, solution, px, py, steps;
 const canvas = document.getElementById('maze');
 const ctx = canvas.getContext('2d');
+const IMG = { player: MazeUI.img('images/chara/kodomo.png', () => draw()), goal: MazeUI.img('images/goal/hata.png', () => draw()) };
 
 function newMaze(level) {
   G = MazeUI.SIZES[level] * 2 + 1; // 部屋の数×2＋1 のブロック
@@ -133,7 +119,6 @@ const COLORS = {
   wall: '#c2a251', wallTop: '#e8c86a',
   trail: 'rgba(251,191,36,0.5)', trailBorder: 'rgba(245,158,11,0.8)',
   hint: 'rgba(253,120,60,0.35)',
-  start: '#4ade80', goal: '#f97316',
 };
 
 function draw() {
@@ -154,25 +139,9 @@ function draw() {
       }
     }
   }
-  // スタート（みどりの まる）・ゴール（オレンジの ほし）
-  ctx.fillStyle = COLORS.start;
-  ctx.beginPath(); ctx.arc(CELL * 1.5, CELL * 1.5, CELL / 2 - 2, 0, Math.PI * 2); ctx.fill();
-  drawStar((G - 2) * CELL + CELL / 2, (G - 2) * CELL + CELL / 2, CELL / 2 - 1, CELL / 4, COLORS.goal);
-  // ひと
-  ctx.font = `${CELL + 2}px serif`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('🚶', px * CELL + CELL / 2, py * CELL + CELL / 2);
-}
-
-function drawStar(cx, cy, outerR, innerR, color) {
-  ctx.fillStyle = color; ctx.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const r = i % 2 === 0 ? outerR : innerR;
-    const a = (i * Math.PI / 5) - Math.PI / 2;
-    const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  }
-  ctx.closePath(); ctx.fill();
+  // ゴールの旗・さんぽする子ども（ブロック1つより少し大きく描く）
+  MazeUI.drawImg(ctx, IMG.goal, (G - 2) * CELL + CELL / 2, (G - 2) * CELL + CELL / 2, CELL * 1.25);
+  MazeUI.drawImg(ctx, IMG.player, px * CELL + CELL / 2, py * CELL + CELL / 2, CELL * 1.3);
 }
 
 // ======== まちの おんがく：あかるい ポップ ========
@@ -232,23 +201,6 @@ function stopMusic() {
   musicNodes = [];
 }
 
-// 雲
-const layer = document.getElementById('cloudLayer');
-for (let i = 0; i < 5; i++) {
-  const c = document.createElement('div');
-  c.className = 'cloud-shape';
-  c.style.cssText = `width:${60 + Math.random() * 80}px;height:${20 + Math.random() * 20}px;top:${5 + Math.random() * 40}px;left:${Math.random() * 100}%;animation-duration:${20 + Math.random() * 20}s;animation-delay:${-Math.random() * 20}s;opacity:${0.5 + Math.random() * 0.4};`;
-  layer.appendChild(c);
-}
-// うしろのビル
-const bg = document.getElementById('buildingsBg');
-const bcols = ['#f59e0b','#fcd34d','#fb7185','#60a5fa','#a78bfa','#34d399','#f97316'];
-for (let i = 0; i < 20; i++) {
-  const b = document.createElement('div');
-  b.className = 'bld';
-  b.style.cssText = `width:${20 + Math.random() * 30}px;height:${40 + Math.random() * 70}px;background:${bcols[Math.floor(Math.random() * bcols.length)]};`;
-  bg.appendChild(b);
-}
 // 下を走る車
 const cars = ['🚗','🚕','🚙','🚌','🛻'];
 for (let i = 0; i < 3; i++) {
@@ -267,7 +219,7 @@ MazeUI.mount({
   onHint: () => draw(),
   onResize: fit,
   music: { start: startMusic, stop: stopMusic },
-  clear: { emoji: '🚶', text: 'ぶじに まちを あるききったよ！' },
+  clear: { img: 'images/chara/kodomo.png', text: 'ぶじに まちを あるききったよ！' },
 });
 </script>
 </body>
