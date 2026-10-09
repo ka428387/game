@@ -151,6 +151,10 @@ header{width:100%;padding:58px 16px 2px;text-align:center}
   box-shadow:0 4px 0 var(--wood-dk);margin-top:6px;
 }
 .again-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood-dk)}
+.end-btn{
+  display:inline-block;padding:12px 36px;border-radius:50px;border:2px solid var(--wood);
+  background:var(--paper);color:var(--wood-dk);font-size:1rem;font-weight:900;text-decoration:none;
+}
 </style>
 </head>
 <body data-asobi="game">
@@ -175,9 +179,10 @@ header{width:100%;padding:58px 16px 2px;text-align:center}
 
 <div id="completeScreen">
   <div class="big-emoji">🎊</div>
-  <div class="complete-title">ぜんぶ できたよ！</div>
+  <div class="complete-title" id="completeTitle">5もん できたよ！</div>
   <div class="complete-sub" id="completeSub"></div>
-  <button class="again-btn" onclick="restart()">もういちど あそぶ</button>
+  <button class="again-btn" onclick="restart()">もっと あそぶ</button>
+  <a class="end-btn" href="index.html">おしまい</a>
 </div>
 
 <script>
@@ -832,14 +837,15 @@ const ALL_QS = [
 /* ══════════════════════════════════════
    ゲームエンジン
 ══════════════════════════════════════ */
-const TOTAL = ALL_QS.length; // 16
-let qs=[], idx=0, score=0, answered=false;
+// 1かいで 5もん。おわったら「もっと あそぶ」で つぎの 5もん（16もんを じゅんばんに つかう）
+const ROUND = 5;
+let pool=[], qs=[], idx=0, score=0, answered=false, firstTry=true;
 
 function shuffle(a){return[...a].sort(()=>Math.random()-.5)}
 
 function init(){
-  // 問題の順序はシャッフルするが16問すべて使う
-  qs = shuffle(ALL_QS);
+  if(pool.length<ROUND) pool = shuffle(ALL_QS);
+  qs = pool.splice(0, ROUND);
   idx=0; score=0; answered=false;
   document.getElementById('completeScreen').classList.remove('show');
   document.getElementById('qCard').style.display='flex';
@@ -852,9 +858,9 @@ function init(){
 
 function updateCount(){
   const c=document.getElementById('qCount');
-  c.style.display = idx<TOTAL ? '' : 'none';
+  c.style.display = idx<ROUND ? '' : 'none';
   document.getElementById('qNum').textContent=idx+1;
-  document.getElementById('qTotal').textContent=TOTAL;
+  document.getElementById('qTotal').textContent=ROUND;
 }
 
 function showHint(){
@@ -866,7 +872,7 @@ function showHint(){
 }
 
 function render(){
-  answered=false; updateCount();
+  answered=false; firstTry=true; updateCount();
   const q=qs[idx];
   document.getElementById('qTag').textContent  = q.tag;
   document.getElementById('qText').textContent = 'なかまはずれは　どれ？';
@@ -887,32 +893,33 @@ function render(){
   });
 }
 
+// まちがえても、そのカードだけ うすくして もういちど えらべる。せいかいしたら せつめいと「つぎへ」
 function tap(card,isOdd,grid,explain){
   if(answered) return;
-  answered=true;
-  grid.querySelectorAll('.card').forEach(c=>c.classList.add('locked'));
   const fb=document.getElementById('feedback');
-  const ex=document.getElementById('explain');
   if(isOdd){
+    answered=true;
+    if(firstTry) score++;
     card.classList.add('correct');
-    score++;
+    grid.querySelectorAll('.card').forEach(c=>{c.classList.add('locked'); if(c!==card) c.classList.add('faded');});
     fb.textContent='⭕ せいかい！ よくわかったね！';
-    Asobi.sfx('ok');
     fb.className='feedback ok show';
+    Asobi.sfx('ok');
+    const ex=document.getElementById('explain');
+    if(explain){ex.textContent='📖 '+explain; ex.className='explain show';}
+    document.getElementById('nextBtn').className='next-btn show';
   } else {
-    card.classList.add('wrong');
-    grid.querySelectorAll('.card').forEach(c=>{if(c!==card)c.classList.add('faded')});
-    fb.textContent='❌ ざんねん！ つぎも がんばろう！';
-    Asobi.sfx('ng');
+    firstTry=false;
+    card.classList.add('wrong','faded');
+    fb.textContent='🤔 ちがうみたい。もういちど えらんでね！';
     fb.className='feedback ng show';
+    Asobi.sfx('ng');
   }
-  if(explain){ex.textContent='📖 '+explain; ex.className='explain show';}
-  document.getElementById('nextBtn').className='next-btn show';
 }
 
 function next(){
   idx++;
-  if(idx>=TOTAL){showComplete();return;}
+  if(idx>=ROUND){showComplete();return;}
   render();
 }
 
@@ -924,19 +931,13 @@ function showComplete(){
   document.getElementById('nextBtn').className='next-btn';
   updateCount();
 
-  const emoji = score===TOTAL ? '🏆' : score>=12 ? '🎊' : score>=8 ? '🌟' : '🌱';
-  document.querySelector('.big-emoji').textContent = emoji;
-
-  const cs=document.getElementById('completeScreen');
-  cs.classList.add('show');
+  document.querySelector('.big-emoji').textContent = score===ROUND ? '🏆' : '🎊';
+  document.getElementById('completeTitle').textContent = ROUND+'もん ぜんぶ みつけたね！';
+  document.getElementById('completeScreen').classList.add('show');
   Asobi.sfx('clear');
-  const pct=Math.round(score/TOTAL*100);
-  const msg = score===TOTAL ? 'ぜんもん せいかい！ かんぺき！！'
-            : score>=12    ? 'すごい！ よくできました！'
-            : score>=8     ? 'もうすこし！ がんばったね！'
-            :                'むずかしかったね！ もういちど ちょうせん！';
-  document.getElementById('completeSub').innerHTML=
-    `${TOTAL}もんちゅう <strong>${score}もん</strong> せいかい！（${pct}%）<br>${msg}`;
+  document.getElementById('completeSub').innerHTML = score===ROUND
+    ? 'ぜんぶ 1かいで わかったよ！ すごい！'
+    : `1かいで わかったのは <strong>${score}もん</strong>。<br>まちがえても さいごまで みつけたね！`;
 }
 
 function restart(){init()}

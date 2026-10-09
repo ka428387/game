@@ -72,6 +72,11 @@
     text-shadow: 3px 3px 0 var(--cat-light), 5px 5px 0 rgba(200,150,100,0.2);
   }
 
+  .time-mode { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 4px 0 14px; font-weight: 700; color: var(--soft-brown); }
+  .time-mode button { padding: 6px 16px; border-radius: 999px; border: 2px solid var(--cat-light); background: var(--warm-white); color: var(--soft-brown); font-weight: 800; font-size: 0.95rem; cursor: pointer; }
+  .time-mode button.on { background: var(--cat-orange); border-color: var(--cat-orange); color: #fff; }
+  .no-timer .timer-bar-bg, .no-timer #timer-label { visibility: hidden; }
+
   .game-subtitle {
     font-size: 1rem;
     color: var(--soft-brown);
@@ -695,6 +700,13 @@
     <div class="game-subtitle">レベルをえらんでね！</div>
   </div>
 
+  <!-- じかん：さいしょは「なし」。「チャレンジ」は じかんせいげんあり（まえの あそびかた） -->
+  <div class="time-mode">
+    <span>⏱ じかん</span>
+    <button type="button" id="tm-off" onclick="setTimeMode(false)">なし</button>
+    <button type="button" id="tm-on" onclick="setTimeMode(true)">チャレンジ</button>
+  </div>
+
   <div id="level-grid" class="level-grid"></div>
 </div>
 
@@ -828,7 +840,7 @@ const LEVELS = {
     { id: 5, name: 'レベル5', stars: '⭐⭐⭐⭐⭐', desc: '3けた×2けた', gen: () => mulGen(100,999, 10,99) },
   ],
   divide: [
-    { id: 1, name: 'レベル1', stars: '⭐', desc: 'わりきれる÷1けた', gen: () => divGen(1,9) },
+    { id: 1, name: 'レベル1', stars: '⭐', desc: 'わりきれる÷1けた', gen: () => divGen(9) },
     { id: 2, name: 'レベル2', stars: '⭐⭐', desc: '2けた÷1けた', gen: () => divGenBig(10,99, 2,9) },
     { id: 3, name: 'レベル3', stars: '⭐⭐⭐', desc: '3けた÷1けた', gen: () => divGenBig(100,999, 2,9) },
     { id: 4, name: 'レベル4', stars: '⭐⭐⭐⭐', desc: '2けた÷2けた', gen: () => divGenBig(10,99, 10,99) },
@@ -872,6 +884,7 @@ function divGenBig(aMin, aMax, bMin, bMax) {
 
 // ===== SCREEN MANAGEMENT =====
 function showScreen(name) {
+  if (name !== 'game') clearInterval(timerInterval); // ゲームから ぬけたら じかんを とめる
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   window.scrollTo(0, 0);
@@ -880,11 +893,23 @@ function showScreen(name) {
 }
 
 // ===== COURSE SELECTION =====
+// じかんせいげん：さいしょは なし。えらんだものは おぼえておく
+let timedMode = false;
+try { timedMode = localStorage.getItem('asobi.neko.timed') === '1'; } catch (e) {}
+let tries = 0; // この もんだいで まちがえた かず
+function setTimeMode(on) {
+  timedMode = on;
+  try { localStorage.setItem('asobi.neko.timed', on ? '1' : '0'); } catch (e) {}
+  document.getElementById('tm-off').classList.toggle('on', !on);
+  document.getElementById('tm-on').classList.toggle('on', on);
+}
+
 function selectCourse(course) {
   currentCourse = course;
   const title = course === 'multiply' ? '✖️ かけざんコース' : '➗ わりざんコース';
   document.getElementById('level-course-title').textContent = title;
   buildLevelGrid();
+  setTimeMode(timedMode);
   showScreen('level');
 }
 
@@ -925,6 +950,7 @@ function startGame(levelIndex) {
 
 function showQuestion() {
   answered = false;
+  tries = 0;
   const q = questions[currentQ];
   document.getElementById('question-display').textContent = q.display;
   document.getElementById('question-hint').textContent = q.hint || '';
@@ -939,9 +965,10 @@ function showQuestion() {
   // Progress
   document.getElementById('progress-fill').style.width = (currentQ / totalQ * 100) + '%';
 
-  // Timer
-  maxTime = getTimeLimit();
-  resetTimer();
+  // Timer（じかん なし のときは 出さない・はからない）
+  document.getElementById('screen-game').classList.toggle('no-timer', !timedMode);
+  clearInterval(timerInterval);
+  if (timedMode) { maxTime = getTimeLimit(); resetTimer(); }
 }
 
 function getTimeLimit() {
@@ -1002,12 +1029,20 @@ function checkAnswer(val) {
     setCatHappy();
     document.getElementById('current-score').textContent = score;
     setTimeout(nextQuestion, 1200);
+  } else if (!timedMode && tries === 0) {
+    // じかん なし：1かいめの まちがいは、もういちど こたえられる（ねこは おうえん）
+    tries++;
+    soundWrong();
+    const inp = document.getElementById('answer-input');
+    inp.classList.add('wrong');
+    showFeedback(false, 'おしい！ もういちど かんがえてみよう');
+    setTimeout(() => { inp.value = ''; inp.className = 'answer-input'; answered = false; }, 700);
   } else {
     wrongCount++;
     soundWrong();
     document.getElementById('answer-input').classList.add('wrong');
-    showFeedback(false, `✗ ざんねん… こたえは ${correct} だよ`);
-    setCatSad();
+    showFeedback(false, `こたえは ${correct} だよ。つぎ がんばろう！`);
+    if (timedMode) setCatSad();
     setTimeout(nextQuestion, 2200);
   }
 }
@@ -1019,6 +1054,8 @@ function showFeedback(ok, msg) {
 }
 
 function nextQuestion() {
+  // とちゅうで「もどる」したあとに、まえの もんだいの つづきが 動かないように
+  if (!document.getElementById('screen-game').classList.contains('active')) return;
   currentQ++;
   if (currentQ >= totalQ) {
     showResult();

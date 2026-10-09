@@ -45,44 +45,45 @@
   }
 
   /* カード：画用紙に、ゲームごとの色のふち */
+  /* カード：2列。大きな絵・名前・年齢の札。ゲームごとの色のふち */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .card {
     --c: #7cbf5a; --c2: #e6f5da;
-    display: block; text-decoration: none;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 14px 8px 12px; text-decoration: none; text-align: center;
     border-radius: 24px; border: 3px solid var(--c);
     background: #fffdf6;
     box-shadow: 0 5px 0 var(--c), 0 10px 22px rgba(40, 70, 100, 0.12);
     transition: transform 0.15s, box-shadow 0.15s;
     animation: fadeUp 0.5s ease both;
   }
+  .card.wide { grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 14px; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
   .card:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--c), 0 4px 10px rgba(40, 70, 100, 0.12); }
   .card-mori   { --c: #6fb24a; --c2: #e4f4d6; animation-delay: .05s; }
   .card-umi    { --c: #3d9be0; --c2: #dcefff; animation-delay: .1s; }
   .card-machi  { --c: #f08a2c; --c2: #fff0dc; animation-delay: .15s; }
   .card-space  { --c: #7a5cd6; --c2: #ece6ff; animation-delay: .2s; }
-  .card-rocket { --c: #3a6fd0; --c2: #e0eaff; animation-delay: .25s; }
-  .card-neko   { --c: #e0884a; --c2: #fdeadb; animation-delay: .3s; }
-  .card-nakama { --c: #b763c7; --c2: #f6e4fa; animation-delay: .35s; }
+  .card-nakama { --c: #b763c7; --c2: #f6e4fa; animation-delay: .25s; }
+  .card-rocket { --c: #3a6fd0; --c2: #e0eaff; animation-delay: .3s; }
+  .card-neko   { --c: #e0884a; --c2: #fdeadb; animation-delay: .35s; }
 
-  .card-inner { display: flex; align-items: center; gap: 14px; padding: 14px 16px; }
   .card-icon {
-    flex: none; width: 72px; height: 72px; border-radius: 50%;
+    width: 92px; height: 92px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    background: var(--c2); font-size: 42px;
+    background: var(--c2);
     animation: iconFloat 3s ease-in-out infinite;
   }
+  .card-icon img { width: 78px; height: 78px; display: block; }
+  .wide .card-icon { width: 72px; height: 72px; }
+  .wide .card-icon img { width: 60px; height: 60px; }
   @keyframes iconFloat { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-4px) rotate(3deg); } }
   .card-umi .card-icon { animation-delay: -1s; } .card-machi .card-icon { animation-delay: -2s; }
   .card-space .card-icon { animation-delay: -.5s; } .card-rocket .card-icon { animation-delay: -1.5s; }
   .card-neko .card-icon { animation-delay: -2.5s; } .card-nakama .card-icon { animation-delay: -.8s; }
-  .card-icon img { width: 60px; height: 60px; display: block; }
-  .card-text { flex: 1; min-width: 0; }
-  .card-title { font-size: clamp(15px, 4.8vw, 21px); font-weight: 900; color: #3b3a4a; letter-spacing: 0.02em; white-space: nowrap; }
-  .card-nakama .card-title { font-size: clamp(14px, 4.3vw, 21px); } /* いちばん長い名前 */
-  .card-desc { margin-top: 2px; font-size: 12px; font-weight: 700; color: #6b6878; }
-  .card-levels { margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap; }
-  .level-tag { padding: 2px 9px; border-radius: 999px; background: var(--c2); color: var(--c); font-size: 11px; font-weight: 800; }
-  .card-arrow { flex: none; font-size: 18px; color: var(--c); }
+  .card-title { font-size: clamp(14px, 4.2vw, 19px); font-weight: 900; color: #3b3a4a; white-space: nowrap; }
+  .level-tag { padding: 2px 10px; border-radius: 999px; background: var(--c2); color: var(--c); font-size: 12px; font-weight: 800; }
+  .wide .text { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 
   .footer {
     margin-top: 28px; padding: 6px 16px; border-radius: 999px;
@@ -102,128 +103,48 @@
   </div>
 
   <div class="cards">
-
     <div class="section-label">🗺️ めいろ</div>
+    <div class="grid">
+      <a class="card card-mori" href="forest-maze.html">
+        <span class="card-icon"><img src="images/chara/risu.png" alt=""></span>
+        <span class="card-title">もりのめいろ</span>
+        <span class="level-tag">3さい〜</span>
+      </a>
+      <a class="card card-umi" href="ocean-maze.html">
+        <span class="card-icon"><img src="images/chara/sakana.png" alt=""></span>
+        <span class="card-title">うみのめいろ</span>
+        <span class="level-tag">3さい〜</span>
+      </a>
+      <a class="card card-machi" href="city-maze.html">
+        <span class="card-icon"><img src="images/chara/kodomo.png" alt=""></span>
+        <span class="card-title">まちのめいろ</span>
+        <span class="level-tag">3さい〜</span>
+      </a>
+      <a class="card card-space" href="space-maze.html">
+        <span class="card-icon"><img src="images/chara/roketto.png" alt=""></span>
+        <span class="card-title">うちゅうのめいろ</span>
+        <span class="level-tag">3さい〜</span>
+      </a>
+    </div>
 
-    <!-- もりのめいろ -->
-    <a class="card card-mori" href="forest-maze.html">
-      <div class="card-inner">
-        <div class="card-icon"><img src="images/chara/risu.png" alt=""></div>
-        <div class="card-text">
-          <div class="card-title">もりのめいろ</div>
-          <div class="card-desc">もりのなかをたんけんしよう！</div>
-          <div class="card-levels">
-            <span class="level-tag">かんたん</span>
-            <span class="level-tag">ふつう</span>
-            <span class="level-tag">むずかしい</span>
-          </div>
-        </div>
-        <div class="card-arrow">▶</div>
-      </div>
-    </a>
-
-    <!-- うみのめいろ -->
-    <a class="card card-umi" href="ocean-maze.html">
-      <div class="card-inner">
-        <div class="card-icon"><img src="images/chara/sakana.png" alt=""></div>
-        <div class="card-text">
-          <div class="card-title">うみのめいろ</div>
-          <div class="card-desc">しんかいをおよいでゴールへ！</div>
-          <div class="card-levels">
-            <span class="level-tag">かんたん</span>
-            <span class="level-tag">ふつう</span>
-            <span class="level-tag">むずかしい</span>
-          </div>
-        </div>
-        <div class="card-arrow">▶</div>
-      </div>
-    </a>
-
-    <!-- まちのめいろ -->
-    <a class="card card-machi" href="city-maze.html">
-      <div class="card-inner">
-        <div class="card-icon"><img src="images/chara/kodomo.png" alt=""></div>
-        <div class="card-text">
-          <div class="card-title">まちのめいろ</div>
-          <div class="card-desc">まちをさんぽしてゴールへ！</div>
-          <div class="card-levels">
-            <span class="level-tag">かんたん</span>
-            <span class="level-tag">ふつう</span>
-            <span class="level-tag">むずかしい</span>
-          </div>
-        </div>
-        <div class="card-arrow">▶</div>
-      </div>
-    </a>
-
-    <!-- うちゅうのめいろ -->
-    <a class="card card-space" href="space-maze.html">
-      <div class="card-inner">
-        <div class="card-icon"><img src="images/chara/roketto.png" alt=""></div>
-        <div class="card-text">
-          <div class="card-title">うちゅうのめいろ</div>
-          <div class="card-desc">うちゅうをとんでゴールへ！</div>
-          <div class="card-levels">
-            <span class="level-tag">かんたん</span>
-            <span class="level-tag">ふつう</span>
-            <span class="level-tag">むずかしい</span>
-          </div>
-        </div>
-        <div class="card-arrow">▶</div>
-      </div>
-    </a>
-
-    <div class="section-label">🎮 ゲーム</div>
-
-    <!-- かずロケット -->
-    <a class="card card-rocket" href="kazu-rocket.html">
-      <div class="card-inner">
-        <div class="card-icon"><img src="images/chara/roketto.png" alt=""></div>
-        <div class="card-text">
-          <div class="card-title">かずロケット</div>
-          <div class="card-desc">かずをかぞえてロケットをとばそう！</div>
-          <div class="card-levels">
-            <span class="level-tag">6コース</span>
-            <span class="level-tag">ロケットあんろっく</span>
-          </div>
-        </div>
-        <div class="card-arrow">▶</div>
-      </div>
-    </a>
-
-    <!-- ねこさんすうランド -->
-    <a class="card card-neko" href="neko-math.html">
-      <div class="card-inner">
-        <div class="card-icon"><img src="images/chara/neko.png" alt=""></div>
-        <div class="card-text">
-          <div class="card-title">ねこさんすうランド</div>
-          <div class="card-desc">ねこといっしょにかけざん・わりざん！</div>
-          <div class="card-levels">
-            <span class="level-tag">しょうがくせい むけ</span>
-            <span class="level-tag">かけざん</span>
-            <span class="level-tag">わりざん</span>
-          </div>
-        </div>
-        <div class="card-arrow">▶</div>
-      </div>
-    </a>
-
-    <!-- なかまわけ -->
-    <a class="card card-nakama" href="nakamawake.html">
-      <div class="card-inner">
-        <div class="card-icon"><img src="images/chara/mushimegane.png" alt=""></div>
-        <div class="card-text">
-          <div class="card-title">なかまはずれは どれ？</div>
-          <div class="card-desc">なかまはずれをみつけよう！</div>
-          <div class="card-levels">
-            <span class="level-tag">3〜4さい</span>
-            <span class="level-tag">8カテゴリ</span>
-          </div>
-        </div>
-        <div class="card-arrow">▶</div>
-      </div>
-    </a>
-
+    <div class="section-label">🎮 かず・なかまはずれ</div>
+    <div class="grid">
+      <a class="card card-nakama" href="nakamawake.html">
+        <span class="card-icon"><img src="images/chara/mushimegane.png" alt=""></span>
+        <span class="card-title">なかまはずれ</span>
+        <span class="level-tag">3さい〜</span>
+      </a>
+      <a class="card card-rocket" href="kazu-rocket.html">
+        <span class="card-icon"><img src="images/chara/roketto.png" alt=""></span>
+        <span class="card-title">かずロケット</span>
+        <span class="level-tag">4さい〜</span>
+      </a>
+      <a class="card card-neko wide" href="neko-math.html">
+        <span class="card-icon"><img src="images/chara/neko.png" alt=""></span>
+        <span class="text"><span class="card-title">ねこさんすうランド</span>
+        <span class="level-tag">しょうがくせい</span></span>
+      </a>
+    </div>
   </div>
 
   <p class="footer">✨ もっとゲームがふえるよ！</p>
