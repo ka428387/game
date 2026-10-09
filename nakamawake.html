@@ -21,7 +21,7 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{
-  background:#f6f1e4 url('images/bg/nakama.jpg') center / cover no-repeat fixed;
+  background: #f6f1e4;
   font-family:'Zen Maru Gothic',sans-serif;
   min-height:100svh;
   display:flex;flex-direction:column;align-items:center;
@@ -155,6 +155,7 @@ header{width:100%;padding:58px 16px 2px;text-align:center}
   display:inline-block;padding:12px 36px;border-radius:50px;border:2px solid var(--wood);
   background:var(--paper);color:var(--wood-dk);font-size:1rem;font-weight:900;text-decoration:none;
 }
+  body::before { background-image: url('images/bg/nakama.jpg'); } /* 背景の絵（common/asobi.css の固定の層） */
 </style>
 </head>
 <body data-asobi="game">

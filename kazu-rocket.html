@@ -12,7 +12,7 @@
 
 body {
   font-family:'Nunito',sans-serif;
-  background:#3a3f9a url('images/bg/kazu.jpg') center / cover no-repeat fixed;
+  background: #3a3f9a;
   min-height:100vh; display:flex; flex-direction:column;
   align-items:center; justify-content:flex-start;
   overflow-x:hidden; overflow-y:auto; padding:56px 10px 40px;
@@ -168,6 +168,7 @@ body {
 .confetti-piece { position:fixed; width:10px; height:14px; border-radius:3px;
   pointer-events:none; z-index:199; animation:cffall var(--dur,1.5s) ease-in forwards; }
 @keyframes cffall { 0%{transform:translateY(-20px) rotate(0);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
+  body::before { background-image: url('images/bg/kazu.jpg'); } /* 背景の絵（common/asobi.css の固定の層） */
 </style>
 </head>
 <body data-asobi="game">

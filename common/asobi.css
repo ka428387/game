@@ -45,3 +45,11 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 /* アプリ（iPhone）では画面のいちばん上（時計・電池の帯）の下までゲームの背景を広げ、中身は帯の下から始める。
    ブラウザでは env() が 0 なので何も変わらない */
 html { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+
+/* 背景の絵（各ページの <style> に body::before { background-image: url(...) } を書く）。
+   iPhone では background-attachment: fixed が効かず、絵がページ全体に広がって下の飾りが画面の外に出てしまうので、
+   画面に固定した層に描く。下の飾り（葉っぱ・花・家など）がいつも画面のいちばん下に見える */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: none center / cover no-repeat;
+}

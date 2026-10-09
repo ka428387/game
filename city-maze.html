@@ -22,10 +22,11 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     min-height: 100vh;
-    background: #bfe6fb url('images/bg/machi.jpg') center / cover no-repeat fixed;
+    background: #bfe6fb;
     overflow-x: hidden;
   }
 
+  body::before { background-image: url('images/bg/machi.jpg'); } /* 背景の絵（common/asobi.css の固定の層） */
 </style>
 </head>
 <body data-asobi="game">

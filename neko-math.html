@@ -30,7 +30,7 @@
 
   body {
     font-family: 'M PLUS Rounded 1c', sans-serif;
-    background: #fbefd6 url('images/bg/neko.jpg') center / cover no-repeat fixed;
+    background: #fbefd6;
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
@@ -636,6 +636,7 @@
     .question-text { font-size: 2.2rem; }
     .answer-input { font-size: 1.6rem; }
   }
+  body::before { background-image: url('images/bg/neko.jpg'); } /* 背景の絵（common/asobi.css の固定の層） */
 </style>
 </head>
 <body data-asobi="game">

@@ -22,10 +22,11 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     min-height: 100vh;
-    background: #4b3fa8 url('images/bg/uchu.jpg') center / cover no-repeat fixed;
+    background: #4b3fa8;
     overflow-x: hidden;
   }
   .mz-board { box-shadow: 0 0 26px rgba(107,70,224,.5); background: #07071f; }
+  body::before { background-image: url('images/bg/uchu.jpg'); } /* 背景の絵（common/asobi.css の固定の層） */
 </style>
 </head>
 <body data-asobi="game">

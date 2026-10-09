@@ -22,10 +22,11 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     min-height: 100vh;
-    background: #e6f2a8 url('images/bg/mori.jpg') center / cover no-repeat fixed;
+    background: #e6f2a8;
     overflow-x: hidden;
   }
   .mz-board { background: #f5edd8; }
+  body::before { background-image: url('images/bg/mori.jpg'); } /* 背景の絵（common/asobi.css の固定の層） */
 </style>
 </head>
 <body data-asobi="game">

@@ -22,7 +22,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     min-height: 100vh;
-    background: #8fd8f5 url('images/bg/umi.jpg') center / cover no-repeat fixed;
+    background: #8fd8f5;
     overflow-x: hidden;
   }
   .bubble {
@@ -38,6 +38,7 @@
     100% { transform: translateY(-100px) translateX(30px) scale(0.8); opacity: 0; }
   }
   .mz-board { box-shadow: 0 6px 18px rgba(20,90,150,0.25); }
+  body::before { background-image: url('images/bg/umi.jpg'); } /* 背景の絵（common/asobi.css の固定の層） */
 </style>
 </head>
 <body data-asobi="game">

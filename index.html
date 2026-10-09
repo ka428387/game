@@ -11,7 +11,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     min-height: 100vh;
-    background: #bfe3fb url('images/sky.jpg') center bottom / cover no-repeat fixed;
+    background: #bfe3fb;
     overflow-x: hidden;
   }
   .content {
@@ -90,6 +90,7 @@
     background: rgba(255, 255, 255, 0.8);
     font-size: 13px; font-weight: 700; color: #4b7a3a;
   }
+  body::before { background-image: url('images/sky.jpg'); } /* 背景の絵（common/asobi.css の固定の層） */
 </style>
 </head>
 <body data-asobi="index">
