@@ -26,12 +26,6 @@
     overflow-x: hidden;
   }
 
-  /* 下を走る車。絵文字は左向きなので、左右反転（scaleX(-1)）して右へ走らせる */
-  @keyframes carMove {
-    from { transform: translateX(-60px) scaleX(-1); }
-    to { transform: translateX(110vw) scaleX(-1); }
-  }
-  .car { position: fixed; bottom: 14px; font-size: 22px; animation: carMove linear infinite; pointer-events: none; z-index: 1; }
 </style>
 </head>
 <body data-asobi="game">
@@ -199,17 +193,6 @@ function startMusic() {
 function stopMusic() {
   musicNodes.forEach(n => { try { n.stop(); } catch (e) {} });
   musicNodes = [];
-}
-
-// 下を走る車
-const cars = ['🚗','🚕','🚙','🚌','🛻'];
-for (let i = 0; i < 3; i++) {
-  const c = document.createElement('div');
-  c.className = 'car';
-  c.textContent = cars[Math.floor(Math.random() * cars.length)];
-  const dur = 12 + Math.random() * 20;
-  c.style.cssText = `font-size:${18 + Math.random() * 10}px;bottom:${8 + Math.random() * 20}px;animation-duration:${dur}s;animation-delay:${-Math.random() * dur}s;`;
-  document.body.appendChild(c);
 }
 
 MazeUI.mount({
