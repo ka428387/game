@@ -364,6 +364,7 @@
 
   .answer-input {
     flex: 1;
+    min-width: 0; width: 100%; /* 「こたえる！」ボタンを押し出さない */
     font-family: 'Zen Maru Gothic', sans-serif;
     font-size: 2rem;
     font-weight: 900;
@@ -394,6 +395,7 @@
   }
 
   .btn-submit {
+    flex: none;
     background: linear-gradient(135deg, var(--cat-orange), var(--cat-peach));
     border: none;
     border-radius: 16px;
@@ -416,8 +418,10 @@
     font-family: 'Zen Maru Gothic', sans-serif;
     font-size: 1.4rem;
     font-weight: 900;
-    min-height: 40px;
-    transition: all 0.3s;
+    line-height: 1.35;
+    white-space: pre-line;
+    min-height: 2.7em; /* 2行ぶん空けておく（言葉の長さで下の数字ボタンが動かないように） */
+    transition: color 0.3s;
   }
   .feedback.correct { color: var(--grass); }
   .feedback.wrong { color: var(--coral); }
@@ -743,7 +747,8 @@
 
     <!-- Answer section -->
     <div class="answer-section">
-      <input type="number" inputmode="numeric" class="answer-input" id="answer-input" placeholder="？" min="0" max="9999" autocomplete="off"/>
+      <!-- 入力は下の数字ボタンだけ（iPhone のキーボードを出さない＝画面が動かない） -->
+      <input type="text" inputmode="none" readonly tabindex="-1" class="answer-input" id="answer-input" placeholder="？" autocomplete="off"/>
       <button class="btn-submit" onclick="submitAnswer()">こたえる！</button>
     </div>
 
@@ -937,7 +942,6 @@ function showQuestion() {
   // Timer
   maxTime = getTimeLimit();
   resetTimer();
-  document.getElementById('answer-input').focus();
 }
 
 function getTimeLimit() {
@@ -980,7 +984,6 @@ function submitAnswer() {
   const val = parseInt(document.getElementById('answer-input').value);
   if (isNaN(val)) {
     document.getElementById('answer-input').style.borderColor = '#aaa';
-    document.getElementById('answer-input').focus();
     return;
   }
   checkAnswer(val);
@@ -1180,8 +1183,11 @@ function numpadInput(val) {
 }
 
 // ===== KEYBOARD =====
+// パソコンのキーボードでも：数字・けす・Enter
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter') submitAnswer();
+  else if (/^[0-9]$/.test(e.key)) numpadInput(e.key);
+  else if (e.key === 'Backspace') { e.preventDefault(); numpadInput('clear'); }
 });
 
 // ===== EFFECTS =====

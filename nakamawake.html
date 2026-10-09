@@ -29,33 +29,19 @@ body{
   padding-bottom:32px;
 }
 
-/* ヘッダー */
-header{
-  width:100%;background:var(--wood);
-  padding:14px 16px;
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-  box-shadow:0 3px 10px var(--shadow);
-  margin-bottom:2px;
+/* 上：ほかのゲームと同じく、ホームへ・おとは画面のすみ（common/asobi.js）。タイトルは真ん中 */
+header{width:100%;padding:58px 16px 2px;text-align:center}
+.app-title{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:24px;font-weight:900;letter-spacing:.06em;color:var(--ink);
+  text-shadow:0 2px 0 #fff,0 0 10px rgba(255,255,255,.9);
 }
-.app-title{font-size:1.05rem;font-weight:900;color:var(--paper);letter-spacing:.05em;text-align:center}
-.slot{display:flex;flex:none}
-.star-row{display:flex;gap:3px;flex-wrap:wrap;max-width:300px;justify-content:flex-end}
-/* せまい画面ではヘッダーを2段にする */
-@media (max-width:520px){
-  header{flex-wrap:wrap;row-gap:8px}
-  .slot[data-asobi-slot="home"]{order:1}
-  .app-title{order:2;flex:1 1 0;min-width:0;text-align:center;font-size:.95rem;letter-spacing:0;white-space:nowrap}
-  .slot[data-asobi-slot="sound"]{order:3}
-  .star-row{order:4;flex:1 1 100%;max-width:none;justify-content:center}
-}
-.star{font-size:1.1rem;transition:transform .3s}
-.star.earned{transform:scale(1.25)}
-
-/* 進捗ドット */
-.dots{display:flex;gap:7px;margin:14px 0 6px}
-.dot{width:10px;height:10px;border-radius:50%;background:rgba(184,132,90,.22);transition:background .3s}
-.dot.done  {background:var(--wood)}
-.dot.active{background:var(--wood-dk);box-shadow:0 0 0 3px rgba(184,132,90,.3)}
+.app-title img{width:36px;height:36px}
+/* 進み具合：☆が16こ。いまの問題は大きく、せいかいすると⭐ */
+.star-row{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:340px;margin:8px auto 6px}
+.star{font-size:1rem;color:#c2ad8e;transition:transform .3s}
+.star.active{transform:scale(1.4);color:var(--wood-dk)}
+.star.earned{transform:scale(1.15)}
 
 /* 問題カード */
 .q-card{
@@ -171,13 +157,9 @@ header{
 <body data-asobi="game">
 
 <header>
-  <span class="slot" data-asobi-slot="home"></span>
-  <div class="app-title">なかまはずれは どれ？</div>
+  <h1 class="app-title"><img src="images/chara/mushimegane.png" alt="">なかまはずれ</h1>
   <div class="star-row" id="starRow"></div>
-  <span class="slot" data-asobi-slot="sound"></span>
 </header>
-
-<div class="dots" id="dots"></div>
 
 <div class="q-card" id="qCard">
   <div class="q-tag" id="qTag"></div>
@@ -866,16 +848,9 @@ function init(){
   document.getElementById('feedback').className='feedback';
   document.getElementById('explain').className='explain';
   document.getElementById('nextBtn').className='next-btn';
-  buildDots(); buildStars(); render();
+  buildStars(); render();
 }
 
-function buildDots(){
-  const w=document.getElementById('dots'); w.innerHTML='';
-  for(let i=0;i<TOTAL;i++){
-    const d=document.createElement('div');
-    d.className='dot'+(i===0?' active':''); d.id='d'+i; w.appendChild(d);
-  }
-}
 function buildStars(){
   const w=document.getElementById('starRow'); w.innerHTML='';
   for(let i=0;i<TOTAL;i++){
@@ -883,10 +858,10 @@ function buildStars(){
     s.className='star'; s.id='s'+i; s.textContent='☆'; w.appendChild(s);
   }
 }
-function updateDots(){
+function updateStars(){
   for(let i=0;i<TOTAL;i++){
-    const d=document.getElementById('d'+i); if(!d) return;
-    d.className='dot'+(i<idx?'done':i===idx?' active':'');
+    const s=document.getElementById('s'+i); if(!s) return;
+    s.classList.toggle('active', i===idx);
   }
 }
 
@@ -899,7 +874,7 @@ function showHint(){
 }
 
 function render(){
-  answered=false; updateDots();
+  answered=false; updateStars();
   const q=qs[idx];
   document.getElementById('qTag').textContent  = q.tag;
   document.getElementById('qText').textContent = 'なかまはずれは　どれ？';
@@ -957,7 +932,7 @@ function showComplete(){
   document.getElementById('feedback').className='feedback';
   document.getElementById('explain').className='explain';
   document.getElementById('nextBtn').className='next-btn';
-  document.getElementById('dots').innerHTML='';
+  updateStars();
 
   const emoji = score===TOTAL ? '🏆' : score>=12 ? '🎊' : score>=8 ? '🌟' : '🌱';
   document.querySelector('.big-emoji').textContent = emoji;

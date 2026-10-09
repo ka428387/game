@@ -26,7 +26,6 @@
     overflow-x: hidden;
   }
   .mz-board { box-shadow: 0 0 26px rgba(107,70,224,.5); background: #07071f; }
-  .mz-info span:last-child:not(:first-child) { color: #ffd54f; }
 </style>
 </head>
 <body data-asobi="game">
@@ -36,22 +35,21 @@
 </main>
 
 <script>
-// うちゅうのめいろ：かべは ブロック。ロケットが ⭐を あつめながら わくせいを めざす
+// うちゅうのめいろ：かべは ブロック。ロケットが わくせいを めざす
 (function () {
   "use strict";
   const cv = document.getElementById('cv');
   const ctx = cv.getContext('2d');
-  const IMG = { rocket: MazeUI.img('images/chara/roketto.png'), star: MazeUI.img('images/item/hoshi.png'), goal: MazeUI.img('images/goal/wakusei.png') };
+  const IMG = { rocket: MazeUI.img('images/chara/roketto.png'), goal: MazeUI.img('images/goal/wakusei.png') };
   let heading = Math.PI / 2; // ロケットの向き（はじめは右向き）
 
-  const STARS = [3, 5, 7]; // むずかしさごとの ⭐の数
-  let CELLS = 6, STAR_COUNT = 3, R = 0;
-  let grid = [], starSet = new Set(), solution = new Set();
+  let CELLS = 6, R = 0;
+  let grid = [], solution = new Set();
   let goal = { r: 0, c: 0 }, player = { r: 1, c: 1 }, disp = { x: 1, y: 1 };
   let animating = false, animFrom = null, animTo = null, animStart = 0;
   const animDur = 90;
   let pendingDir = null;
-  let steps = 0, starsGot = 0, won = false;
+  let steps = 0, won = false;
   let particles = [], confetti = [];
   const bgStars = [];
   for (let i = 0; i < 90; i++) bgStars.push({ x: Math.random(), y: Math.random(), s: Math.random() * 1.6 + 0.5, ph: Math.random() * Math.PI * 2, sp: Math.random() * 2 + 1 });
@@ -78,31 +76,7 @@
     }
     player = { r: 1, c: 1 };
     goal = { r: R - 2, c: R - 2 };
-    placeStars();
     solve();
-  }
-
-  // ⭐は いきどまりに おく
-  function placeStars() {
-    starSet = new Set();
-    const deadEnds = [], paths = [];
-    for (let r = 1; r < R; r += 2) for (let c = 1; c < R; c += 2) {
-      if (grid[r][c] !== 0) continue;
-      if ((r === 1 && c === 1) || (r === goal.r && c === goal.c)) continue;
-      let open = 0;
-      if (grid[r - 1][c] === 0) open++;
-      if (grid[r + 1][c] === 0) open++;
-      if (grid[r][c - 1] === 0) open++;
-      if (grid[r][c + 1] === 0) open++;
-      paths.push([r, c]);
-      if (open === 1) deadEnds.push([r, c]);
-    }
-    const pool = deadEnds.length >= STAR_COUNT ? deadEnds.slice() : deadEnds.concat(paths);
-    for (let i = pool.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [pool[i], pool[j]] = [pool[j], pool[i]]; }
-    for (const [r, c] of pool) {
-      starSet.add(r + ',' + c);
-      if (starSet.size >= STAR_COUNT) break;
-    }
   }
 
   // ヒント用：スタートからゴールまでの道
@@ -130,8 +104,6 @@
     cell = size / R;
   }
 
-  function starText() { return '⭐ ほし：' + starsGot + '/' + STAR_COUNT; }
-
   function tryMove(dx, dy) {
     if (won) return false;
     if (animating) { pendingDir = [dx, dy]; return false; }
@@ -144,32 +116,18 @@
     heading = Math.atan2(dy, dx) + Math.PI / 2; // 絵のロケットは上向きなので 90° たす
     MazeUI.setSteps(++steps);
     for (let i = 0; i < 5; i++) {
-      particles.push({ x: disp.x, y: disp.y, vx: -dx * 0.04 + (Math.random() - .5) * 0.03, vy: -dy * 0.04 + (Math.random() - .5) * 0.03, life: 1, gold: false });
+      particles.push({ x: disp.x, y: disp.y, vx: -dx * 0.04 + (Math.random() - .5) * 0.03, vy: -dy * 0.04 + (Math.random() - .5) * 0.03, life: 1 });
     }
     return true;
   }
   function afterMove() {
-    const key = player.r + ',' + player.c;
-    if (starSet.has(key)) {
-      starSet.delete(key); starsGot++;
-      MazeUI.setExtra(starText());
-      Asobi.sfx('ok');
-      burst(player.c, player.r);
-    }
     if (player.r === goal.r && player.c === goal.c) { doWin(); return; }
     if (pendingDir) { const d = pendingDir; pendingDir = null; tryMove(d[0], d[1]); }
   }
 
-  function burst(c, r) {
-    for (let i = 0; i < 10; i++) {
-      const a = Math.random() * Math.PI * 2, sp = Math.random() * 0.05 + 0.02;
-      particles.push({ x: c, y: r, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, gold: true });
-    }
-  }
   function doWin() {
     won = true;
-    const all = starsGot === STAR_COUNT;
-    MazeUI.win({ extra: '⭐ あつめたほし：' + starsGot + '/' + STAR_COUNT + (all ? '　ぜんぶ！すごい！' : '') });
+    MazeUI.win();
     const ico = ['⭐','✨','🌟','🚀','🪐','💫'];
     confetti = [];
     for (let i = 0; i < 40; i++) {
@@ -224,20 +182,10 @@
     }
 
     const pulse = 0.5 + 0.5 * Math.sin(t * 0.005);
-    starSet.forEach(function (k) {
-      const [r, c] = k.split(',').map(Number);
-      const cx = c * cell + cell / 2, cy = r * cell + cell / 2;
-      ctx.save();
-      halo(cx, cy, cell * (0.55 + 0.12 * pulse), '255,213,79', 0.55);
-      MazeUI.drawImg(ctx, IMG.star, cx, cy, cell * 0.9);
-      ctx.restore();
-    });
-
     {
       const gx = goal.c * cell + cell / 2, gy = goal.r * cell + cell / 2;
-      const open = starsGot >= STAR_COUNT;
       ctx.save();
-      halo(gx, gy, cell * (0.7 + 0.15 * pulse), open ? '110,255,166' : '110,231,255', 0.6);
+      halo(gx, gy, cell * (0.7 + 0.15 * pulse), '110,255,166', 0.6);
       MazeUI.drawImg(ctx, IMG.goal, gx, gy, cell * 1.05);
       ctx.restore();
     }
@@ -246,7 +194,7 @@
       const p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.05;
       if (p.life <= 0) { particles.splice(i, 1); continue; }
       ctx.globalAlpha = Math.max(0, p.life);
-      ctx.fillStyle = p.gold ? '#ffd54f' : '#9bf0ff';
+      ctx.fillStyle = '#9bf0ff';
       ctx.beginPath(); ctx.arc(p.x * cell + cell / 2, p.y * cell + cell / 2, cell * 0.12 * p.life + 1, 0, Math.PI * 2); ctx.fill();
     }
     ctx.globalAlpha = 1;
@@ -285,12 +233,10 @@
 
   function newGame(level) {
     CELLS = MazeUI.SIZES[level];
-    STAR_COUNT = STARS[level];
-    steps = 0; starsGot = 0; won = false; particles = []; confetti = []; pendingDir = null; animating = false;
+    steps = 0; won = false; particles = []; confetti = []; pendingDir = null; animating = false;
     genMaze();
     disp.x = player.c; disp.y = player.r;
     MazeUI.setSteps(0);
-    MazeUI.setExtra(starText());
     fit();
   }
 
