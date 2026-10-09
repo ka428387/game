@@ -37,11 +37,10 @@ header{width:100%;padding:58px 16px 2px;text-align:center}
   text-shadow:0 2px 0 #fff,0 0 10px rgba(255,255,255,.9);
 }
 .app-title img{width:36px;height:36px}
-/* 進み具合：☆が16こ。いまの問題は大きく、せいかいすると⭐ */
-.star-row{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:340px;margin:8px auto 6px}
-.star{font-size:1rem;color:#c2ad8e;transition:transform .3s}
-.star.active{transform:scale(1.4);color:var(--wood-dk)}
-.star.earned{transform:scale(1.15)}
+/* 進み具合：ねこさんすうランドと同じ「もんだい 3/16」。せいかい・まちがいは並べない */
+.q-count{display:inline-block;margin:8px auto 6px;padding:5px 16px;border-radius:12px;
+  background:var(--paper);box-shadow:0 2px 8px var(--shadow);font-size:.95rem;font-weight:700;color:var(--ink)}
+.q-count b{color:var(--wood-dk)}
 
 /* 問題カード */
 .q-card{
@@ -158,7 +157,7 @@ header{width:100%;padding:58px 16px 2px;text-align:center}
 
 <header>
   <h1 class="app-title"><img src="images/chara/mushimegane.png" alt="">なかまはずれ</h1>
-  <div class="star-row" id="starRow"></div>
+  <div class="q-count" id="qCount">もんだい <b id="qNum">1</b>/<span id="qTotal">16</span></div>
 </header>
 
 <div class="q-card" id="qCard">
@@ -848,21 +847,14 @@ function init(){
   document.getElementById('feedback').className='feedback';
   document.getElementById('explain').className='explain';
   document.getElementById('nextBtn').className='next-btn';
-  buildStars(); render();
+  render();
 }
 
-function buildStars(){
-  const w=document.getElementById('starRow'); w.innerHTML='';
-  for(let i=0;i<TOTAL;i++){
-    const s=document.createElement('div');
-    s.className='star'; s.id='s'+i; s.textContent='☆'; w.appendChild(s);
-  }
-}
-function updateStars(){
-  for(let i=0;i<TOTAL;i++){
-    const s=document.getElementById('s'+i); if(!s) return;
-    s.classList.toggle('active', i===idx);
-  }
+function updateCount(){
+  const c=document.getElementById('qCount');
+  c.style.display = idx<TOTAL ? '' : 'none';
+  document.getElementById('qNum').textContent=idx+1;
+  document.getElementById('qTotal').textContent=TOTAL;
 }
 
 function showHint(){
@@ -874,7 +866,7 @@ function showHint(){
 }
 
 function render(){
-  answered=false; updateStars();
+  answered=false; updateCount();
   const q=qs[idx];
   document.getElementById('qTag').textContent  = q.tag;
   document.getElementById('qText').textContent = 'なかまはずれは　どれ？';
@@ -904,8 +896,6 @@ function tap(card,isOdd,grid,explain){
   if(isOdd){
     card.classList.add('correct');
     score++;
-    const s=document.getElementById('s'+idx);
-    if(s){s.textContent='⭐';s.classList.add('earned')}
     fb.textContent='⭕ せいかい！ よくわかったね！';
     Asobi.sfx('ok');
     fb.className='feedback ok show';
@@ -932,7 +922,7 @@ function showComplete(){
   document.getElementById('feedback').className='feedback';
   document.getElementById('explain').className='explain';
   document.getElementById('nextBtn').className='next-btn';
-  updateStars();
+  updateCount();
 
   const emoji = score===TOTAL ? '🏆' : score>=12 ? '🎊' : score>=8 ? '🌟' : '🌱';
   document.querySelector('.big-emoji').textContent = emoji;
