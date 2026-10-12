@@ -29,7 +29,7 @@
   body::before { background-image: url('images/bg/machi.jpg'); } /* 背景の絵（common/asobi.css の固定の層） */
 </style>
 </head>
-<body data-asobi="game">
+<body data-asobi="game" data-asobi-sound="none">
 
 
 <main class="mz" id="mz">
@@ -66,6 +66,7 @@ function fit() {
 function generateMaze(g) {
   const grid = Array.from({ length: g }, () => Array(g).fill(1)); // 1=かべ
   const stack = [[1, 1]]; grid[1][1] = 0;
+  grid[g - 2][g - 2] = 2; // ゴールは行きどまり（さきに道がつづかない）。ほりすすめないよう、あとで1か所だけつなぐ
   while (stack.length) {
     const [x, y] = stack[stack.length - 1];
     const opts = [[0,-2],[0,2],[-2,0],[2,0]].filter(([dx, dy]) => {
@@ -78,6 +79,8 @@ function generateMaze(g) {
     grid[y + dy][x + dx] = 0;
     stack.push([x + dx, y + dy]);
   }
+  grid[g - 2][g - 2] = 0;
+  if (Math.random() < 0.5) grid[g - 2][g - 3] = 0; else grid[g - 3][g - 2] = 0;
   return grid;
 }
 

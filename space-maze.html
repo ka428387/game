@@ -29,7 +29,7 @@
   body::before { background-image: url('images/bg/uchu.jpg'); } /* 背景の絵（common/asobi.css の固定の層） */
 </style>
 </head>
-<body data-asobi="game">
+<body data-asobi="game" data-asobi-sound="none">
 
 <main class="mz" id="mz">
   <div class="mz-board"><canvas id="cv"></canvas></div>
@@ -61,6 +61,7 @@
     const visited = Array.from({ length: CELLS }, () => new Array(CELLS).fill(false));
     const stack = [[0, 0]];
     visited[0][0] = true; grid[1][1] = 0;
+    visited[CELLS - 1][CELLS - 1] = true; // ゴールは行きどまり（さきに道がつづかない）。あとで1か所だけつなぐ
     while (stack.length) {
       const [cy, cx] = stack[stack.length - 1];
       const opts = [];
@@ -75,6 +76,8 @@
       grid[ny * 2 + 1][nx * 2 + 1] = 0;
       stack.push([ny, nx]);
     }
+    grid[R - 2][R - 2] = 0;
+    if (Math.random() < 0.5) grid[R - 2][R - 3] = 0; else grid[R - 3][R - 2] = 0;
     player = { r: 1, c: 1 };
     goal = { r: R - 2, c: R - 2 };
     solve();

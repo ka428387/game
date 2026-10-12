@@ -49,12 +49,11 @@
   function setHint(on) {
     st.hint = on;
     el.hintBtn.classList.toggle('on', on); // ついているときは色がつく
-        if (cfg.onHint) cfg.onHint(on);
+    if (cfg.onHint) cfg.onHint(on);
   }
   function setMusic(on) {
     st.music = on;
-    el.musicBtn.classList.toggle('on', on);
-        if (!cfg.music) return;
+    if (!cfg.music) return;
     if (on) cfg.music.start(); else cfg.music.stop();
   }
 
@@ -96,9 +95,7 @@
     var tools = make('div', 'mz-row mz-tools');
     tools.appendChild(button('mz-btn', '🔄 あたらしく', newGame));
     el.hintBtn = button('mz-btn', '💡 ヒント', function () { setHint(!st.hint); });
-    el.musicBtn = button('mz-btn', '🎵 おんがく', function () { setMusic(!st.music); });
     tools.appendChild(el.hintBtn);
-    tools.appendChild(el.musicBtn);
 
     el.info = make('div', 'mz-info');
 
@@ -113,12 +110,27 @@
       var b = make('button', p[0], p[1]);
       b.type = 'button';
       b.setAttribute('aria-label', { up: 'うえ', left: 'ひだり', right: 'みぎ', down: 'した' }[p[0]]);
+      // 押した瞬間に1マス。押しつづけると、少しまってから つづけて進む
+      var holdWait = null, holdTimer = null;
+      function stopHold() {
+        clearTimeout(holdWait); clearInterval(holdTimer);
+        holdWait = holdTimer = null;
+        b.classList.remove('pressed');
+      }
       b.addEventListener('pointerdown', function (e) {
         e.preventDefault();
+        stopHold();
         b.classList.add('pressed');
-        setTimeout(function () { b.classList.remove('pressed'); }, 120);
         move(DIRS[p[0]][0], DIRS[p[0]][1]);
+        holdWait = setTimeout(function () {
+          holdTimer = setInterval(function () {
+            if (st.won) { stopHold(); return; }
+            move(DIRS[p[0]][0], DIRS[p[0]][1]);
+          }, 130);
+        }, 350);
       });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { b.addEventListener(ev, stopHold); });
+      b.addEventListener('contextmenu', function (e) { e.preventDefault(); });
       pad.appendChild(b);
     });
     root.appendChild(pad);
@@ -147,6 +159,15 @@
     card.appendChild(row);
     el.clear.appendChild(card);
     document.body.appendChild(el.clear);
+
+    // バックミュージックは全コースで流す（ブラウザの決まりで、最初のタッチ・キーのあとから）
+    function startMusicOnce() {
+      document.removeEventListener('pointerdown', startMusicOnce, true);
+      document.removeEventListener('keydown', startMusicOnce, true);
+      setMusic(true);
+    }
+    document.addEventListener('pointerdown', startMusicOnce, true);
+    document.addEventListener('keydown', startMusicOnce, true);
 
     // キーボード
     document.addEventListener('keydown', function (e) {

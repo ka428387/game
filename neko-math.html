@@ -239,6 +239,7 @@
   .lv3 { border-top: 5px solid var(--sunny); }
   .lv4 { border-top: 5px solid var(--cat-orange); }
   .lv5 { border-top: 5px solid var(--coral); }
+  .lv6 { border-top: 5px solid var(--coral); }
 
   /* ===== SECTION TITLE ===== */
   .section-title {
@@ -657,7 +658,7 @@
     <div class="card card-multiply" onclick="selectCourse('multiply')">
       <span class="card-icon">✖️</span>
       <div class="card-title">かけざんコース</div>
-      <div class="card-desc">かけざんのれんしゅうをしよう！<br>1けたから おおきい かずまで</div>
+      <div class="card-desc">かけざんのれんしゅうをしよう！<br>2・3のだんから 2けた×2けたまで</div>
     </div>
     <div class="card card-divide" onclick="selectCourse('divide')">
       <span class="card-icon">➗</span>
@@ -834,11 +835,12 @@ let wrongCount = 0;
 // ===== LEVEL CONFIGS =====
 const LEVELS = {
   multiply: [
-    { id: 1, name: 'レベル1', stars: '⭐', desc: '1けた×1けた', gen: () => mulGen(1,9, 1,9) },
-    { id: 2, name: 'レベル2', stars: '⭐⭐', desc: '2けた×1けた', gen: () => mulGen(10,99, 2,9) },
-    { id: 3, name: 'レベル3', stars: '⭐⭐⭐', desc: '2けた×2けた', gen: () => mulGen(10,99, 10,99) },
-    { id: 4, name: 'レベル4', stars: '⭐⭐⭐⭐', desc: '3けた×1けた', gen: () => mulGen(100,999, 2,9) },
-    { id: 5, name: 'レベル5', stars: '⭐⭐⭐⭐⭐', desc: '3けた×2けた', gen: () => mulGen(100,999, 10,99) },
+    { id: 1, name: 'レベル1', stars: '⭐', desc: '2・3のだん', gen: () => mulGen(2,3, 1,9) },
+    { id: 2, name: 'レベル2', stars: '⭐', desc: '4・5のだん', gen: () => mulGen(4,5, 1,9) },
+    { id: 3, name: 'レベル3', stars: '⭐⭐', desc: '6〜9のだん', gen: () => mulGen(6,9, 1,9) },
+    { id: 4, name: 'レベル4', stars: '⭐⭐⭐', desc: '10〜20×1けた', gen: () => mulGen(10,20, 2,9) },
+    { id: 5, name: 'レベル5', stars: '⭐⭐⭐⭐', desc: '2けた×1けた', gen: () => mulGen(10,99, 2,9) },
+    { id: 6, name: 'レベル6', stars: '⭐⭐⭐⭐⭐', desc: '2けた×2けた', gen: () => mulGen(10,99, 10,99) },
   ],
   divide: [
     { id: 1, name: 'レベル1', stars: '⭐', desc: 'わりきれる÷1けた', gen: () => divGen(9) },

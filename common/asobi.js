@@ -1,5 +1,5 @@
 // あそびのせかい 共通の部品（全ページで最初に読み込む）
-// - 音：どのゲームの音も、右上の「おと」ボタン1つでまとめて鳴らす／止める（設定はゲームをまたいで残る）
+// - 音：アプリ側の「おと」ボタンはなし。スマホ本体のマナーモード・音量にしたがう
 // - ボタン：左上の「ホームへ」と右上の「おと」を、どのゲームでも同じ形・同じ場所に出す
 // - 効果音：Asobi.sfx('ok' | 'ng' | 'clear' | 'tap')。音のないゲームでも同じ音でほめる
 //
@@ -14,7 +14,7 @@
   function load() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
   function save(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
 
-  var soundOn = load() !== 'off';
+  var soundOn = true; // 音の入り切りはスマホ本体にまかせる（以前の「おと」ボタンの設定は使わない）
   var masters = [];   // 各 AudioContext の出口の音量（0 か 1）
   var contexts = [];
 
@@ -111,6 +111,9 @@
     homeBtn = home;
     setBack(backFn);
     place(home, 'home');
+
+    // 「おと」ボタンはなし。音はスマホのマナーモード・音量にまかせる（アプリの中ではいつも鳴る状態）
+    return;
 
     var snd = document.createElement('button');
     snd.type = 'button';

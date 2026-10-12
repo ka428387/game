@@ -41,7 +41,7 @@
   body::before { background-image: url('images/bg/umi.jpg'); } /* 背景の絵（common/asobi.css の固定の層） */
 </style>
 </head>
-<body data-asobi="game">
+<body data-asobi="game" data-asobi-sound="none">
 
 <main class="mz" id="mz">
   <div class="mz-board"><canvas id="maze"></canvas></div>
@@ -78,6 +78,7 @@ function generateMaze() {
   grid = Array.from({ length: N }, () => Array.from({ length: N }, () => ({ r: true, b: true })));
   const inMaze = Array.from({ length: N }, () => Array(N).fill(false));
   inMaze[0][0] = true;
+  inMaze[N - 1][N - 1] = true; // ゴールは行きどまり（さきに道がつづかない）。あとで1か所だけつなぐ
   const stack = [[0, 0]];
   while (stack.length) {
     const [cx, cy] = stack[stack.length - 1];
@@ -95,6 +96,7 @@ function generateMaze() {
     inMaze[ny][nx] = true;
     stack.push([nx, ny]);
   }
+  if (Math.random() < 0.5) grid[N - 1][N - 2].r = false; else grid[N - 2][N - 1].b = false;
 }
 
 function open(x, y, dx, dy) {

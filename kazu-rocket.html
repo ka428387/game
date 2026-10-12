@@ -200,14 +200,8 @@ body {
     <button class="course-btn cs" onclick="selectCourse('sub')">
       <span class="icon">➖</span><span class="name">ひきざん</span><span class="desc">10〜100まで</span>
     </button>
-    <button class="course-btn cm" onclick="selectCourse('mul')">
-      <span class="icon">✖️</span><span class="name">かけざん</span><span class="desc">くく〜おおきいかず</span>
-    </button>
-    <button class="course-btn cd" onclick="selectCourse('div')">
-      <span class="icon">➗</span><span class="name">わりざん</span><span class="desc">くく〜おおきいかず</span>
-    </button>
     <button class="course-btn cx" onclick="selectCourse('mix')">
-      <span class="icon">🌈</span><span class="name">まぜまぜ</span><span class="desc">ぜんぶまじり</span>
+      <span class="icon">🌈</span><span class="name">まぜまぜ</span><span class="desc">たし・ひきの まぜこぜ</span>
     </button>
   </div>
 </div>
@@ -377,28 +371,11 @@ const COURSES = {
     {label:'Lv4',hint:'〜50',  type:'sub',max:50},
     {label:'Lv5',hint:'〜100', type:'sub',max:100},
   ]},
-  mul: { icon:'✖️', name:'かけざん', levels:[
-    {label:'Lv1',hint:'2のだん',    type:'mul',tables:[2]},
-    {label:'Lv2',hint:'3・4のだん', type:'mul',tables:[3,4]},
-    {label:'Lv3',hint:'5・6のだん', type:'mul',tables:[5,6]},
-    {label:'Lv4',hint:'7・8のだん', type:'mul',tables:[7,8]},
-    {label:'Lv5',hint:'9のだん',    type:'mul',tables:[9]},
-    {label:'Lv6',hint:'2〜9 ぜんぶ', type:'mul',tables:[2,3,4,5,6,7,8,9]},
-    {label:'Lv7',hint:'おおきいかず', type:'mul_big',maxA:12,maxB:12},
-  ]},
-  div: { icon:'➗', name:'わりざん', levels:[
-    {label:'Lv1',hint:'÷2',       type:'div',tables:[2]},
-    {label:'Lv2',hint:'÷3・4',    type:'div',tables:[3,4]},
-    {label:'Lv3',hint:'÷5・6',    type:'div',tables:[5,6]},
-    {label:'Lv4',hint:'÷7・8',    type:'div',tables:[7,8]},
-    {label:'Lv5',hint:'÷9',       type:'div',tables:[9]},
-    {label:'Lv6',hint:'÷2〜9 ぜんぶ',type:'div',tables:[2,3,4,5,6,7,8,9]},
-  ]},
   mix: { icon:'🌈', name:'まぜまぜ', levels:[
     {label:'Lv1',hint:'＋−10まで', type:'mix_as',max:10},
     {label:'Lv2',hint:'＋−20まで', type:'mix_as',max:20},
-    {label:'Lv3',hint:'✖️÷ くく',   type:'mix_md',tables:[2,3,4,5]},
-    {label:'Lv4',hint:'ぜんぶ',    type:'mix_all',max:20,tables:[2,3,4,5,6,7,8,9]},
+    {label:'Lv3',hint:'＋−50まで', type:'mix_as',max:50},
+    {label:'Lv4',hint:'＋−100まで',type:'mix_as',max:100},
   ]},
 };
 
@@ -480,8 +457,6 @@ function makeQuestion() {
   const cfg = COURSES[currentCourse].levels[currentLvIdx];
   let type = cfg.type;
   if (type==='mix_as')  type = Math.random()<.5?'add':'sub';
-  if (type==='mix_md')  type = Math.random()<.5?'mul':'div';
-  if (type==='mix_all') type = pick(['add','sub','mul','div']);
 
   const emoji  = pick(EMOJIS);
   const emojiB = EMOJIS.filter(x=>x!==emoji)[ri(0,EMOJIS.length-2)];
@@ -515,35 +490,15 @@ function makeQuestion() {
     eqRow.innerHTML=`<span>${a}</span><span>－</span><span>${b}</span><span>＝</span><div class="question-mark">？</div>`;
     return;
   }
-  if (type==='mul') {
-    const a=pick(cfg.tables||[2,3,4,5]); const b=ri(1,9); correctAns=a*b;
-    document.getElementById('questionText').textContent='こたえは？';
-    eDiv.style.display='none'; eqRow.style.display='flex';
-    eqRow.innerHTML=`<span>${a}</span><span>×</span><span>${b}</span><span>＝</span><div class="question-mark">？</div>`;
-    return;
-  }
-  if (type==='mul_big') {
-    const a=ri(2,cfg.maxA||12); const b=ri(2,cfg.maxB||12); correctAns=a*b;
-    document.getElementById('questionText').textContent='こたえは？';
-    eDiv.style.display='none'; eqRow.style.display='flex';
-    eqRow.innerHTML=`<span>${a}</span><span>×</span><span>${b}</span><span>＝</span><div class="question-mark">？</div>`;
-    return;
-  }
-  if (type==='div') {
-    const d=pick(cfg.tables||[2,3,4,5]); const q=ri(1,9); correctAns=q;
-    document.getElementById('questionText').textContent='こたえは？';
-    eDiv.style.display='none'; eqRow.style.display='flex';
-    eqRow.innerHTML=`<span>${d*q}</span><span>÷</span><span>${d}</span><span>＝</span><div class="question-mark">？</div>`;
-    return;
-  }
 }
 
 function makeChoices() {
   const container=document.getElementById('choices'); container.innerHTML='';
   const opts=new Set([correctAns]); let tries=0;
   while(opts.size<4&&tries<300){
-    tries++; const sp=correctAns>50?15:correctAns>20?8:4;
-    const c=correctAns+ri(-sp,sp); if(c>0&&c!==correctAns) opts.add(c);
+    tries++; const sp=correctAns>=100?Math.round(correctAns*.1):correctAns>50?15:correctAns>20?8:4;
+    // 大きいかずは、一のくらいをそろえた にせの答えもまぜる（くらいどりの練習になる）
+    const c=(correctAns>=100&&Math.random()<.5)?correctAns+10*ri(-Math.ceil(sp/10),Math.ceil(sp/10)):correctAns+ri(-sp,sp); if(c>0&&c!==correctAns) opts.add(c);
   }
   let ex=correctAns+1; while(opts.size<4){if(!opts.has(ex))opts.add(ex);ex++;}
   [...opts].sort(()=>Math.random()-.5).forEach(val=>{
@@ -705,7 +660,7 @@ function makeStars() {
 // ============================================================
 //  Audio Engine
 // ============================================================
-let actx=null, seEnabled=true, bgmEnabled=true; // 音を消すのは右上の共通「おと」ボタン（common/asobi.js）
+let actx=null, seEnabled=true, bgmEnabled=true; // 音はスマホ本体のマナーモード・音量にまかせる
 let bgmSchedulerId=null, bgmMasterGain=null;
 let bgmNextTime=0, bgmMelodyPos=0, bgmBassTime=0;
 

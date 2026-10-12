@@ -29,7 +29,7 @@
   body::before { background-image: url('images/bg/mori.jpg'); } /* 背景の絵（common/asobi.css の固定の層） */
 </style>
 </head>
-<body data-asobi="game">
+<body data-asobi="game" data-asobi-sound="none">
 
 <main class="mz" id="mz">
   <div class="mz-board"><canvas id="maze"></canvas></div>
@@ -66,6 +66,7 @@ function generateMaze(n) {
   for (let y = 0; y < n; y++) { walls[y] = []; for (let x = 0; x < n; x++) walls[y][x] = { right: true, down: true }; }
   const visited = Array.from({ length: n }, () => new Array(n).fill(false));
   const stack = [[0, 0]]; visited[0][0] = true;
+  visited[n - 1][n - 1] = true; // ゴールは行きどまり（さきに道がつづかない）。あとで1か所だけつなぐ
   while (stack.length) {
     const [x, y] = stack[stack.length - 1];
     const opts = [[1,0],[-1,0],[0,1],[0,-1]].filter(([dx, dy]) => {
@@ -82,6 +83,7 @@ function generateMaze(n) {
     visited[ny][nx] = true;
     stack.push([nx, ny]);
   }
+  if (Math.random() < 0.5) walls[n - 1][n - 2].right = false; else walls[n - 2][n - 1].down = false;
   return walls;
 }
 

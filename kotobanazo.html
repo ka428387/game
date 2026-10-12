@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>ことばなぞなぞ｜あそびのせかい</title>
+<link rel="stylesheet" href="common/asobi.css">
+<script src="common/asobi.js"></script>
+<style>
+:root {
+  --paper: #FBF8F2; --wood: #B8845A; --wood-dk: #8A5E38;
+  --ink: #3A2A1A; --ink-lt: #7A6050;
+  --correct: #4E9E72; --wrong: #C94040; --shadow: rgba(60,30,10,.12);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #f6f1e4; min-height: 100svh;
+  display: flex; flex-direction: column; align-items: center;
+  overflow-x: hidden; padding-bottom: 32px;
+}
+header { width: 100%; padding: 58px 16px 2px; text-align: center; }
+.app-title {
+  font-size: 24px; font-weight: 900; letter-spacing: .06em; color: var(--ink);
+  text-shadow: 0 2px 0 #fff, 0 0 10px rgba(255,255,255,.9);
+}
+.q-count {
+  display: inline-block; margin: 8px auto 6px; padding: 5px 16px; border-radius: 12px;
+  background: var(--paper); box-shadow: 0 2px 8px var(--shadow);
+  font-size: .95rem; font-weight: 700; color: var(--ink);
+}
+.q-count b { color: var(--wood-dk); }
+
+.q-card {
+  width: calc(100% - 32px); max-width: 440px;
+  background: var(--paper); border-radius: 22px; padding: 18px 16px 16px;
+  box-shadow: 0 4px 16px var(--shadow);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+}
+.q-text { font-size: 1.1rem; font-weight: 900; color: var(--ink); }
+/* くり返しの文字：ひとかたまりずつ、折り返しても見やすく */
+.letters { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 104px; font-size: 1.45rem; font-weight: 900; color: var(--wood-dk); line-height: 1.5; text-align: center; }
+.slots { display: flex; justify-content: center; gap: 6px; min-height: 64px; width: 100%; }
+.slot {
+  flex: 0 1 54px; min-width: 0; height: 60px; border-radius: 14px; border: 3px dashed var(--wood);
+  background: #fff; font-size: 1.7rem; font-weight: 900; color: var(--ink);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+}
+.slot.filled { border-style: solid; }
+.slots.ng { animation: shake .4s ease; }
+.slots.ok .slot { border-color: var(--correct); background: #EEF8F2; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(4px)} }
+#play { width: 100%; display: flex; flex-direction: column; align-items: center; }
+.q-nan { font-size: 1.5rem; font-weight: 900; color: var(--ink); }
+
+.hint-btn {
+  background: none; border: 2px solid var(--wood); border-radius: 20px; padding: 5px 18px;
+  font-size: .78rem; font-weight: 700; color: var(--wood); cursor: pointer;
+}
+.hint-btn:active { background: var(--wood); color: var(--paper); }
+.tools { display: flex; gap: 10px; }
+.hint-btn:disabled { opacity: .35; }
+.hint-btn[hidden] { display: inline-block; visibility: hidden; }
+.bubble {
+  width: calc(100% - 32px); max-width: 440px; margin-top: 8px; min-height: 92px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  visibility: hidden;
+  font-size: .85rem; font-weight: 700; color: var(--ink-lt);
+  background: rgba(184,132,90,.1); border-radius: 12px; padding: 8px 14px;
+  text-align: center; line-height: 1.6;
+}
+.bubble.show { visibility: visible; }
+.bubble.good { color: #2f6e4b; background: #EEF8F2; font-size: 1rem; }
+.bubble .em { font-size: 2rem; display: block; line-height: 1.2; }
+
+.choices {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  width: calc(100% - 32px); max-width: 440px;
+}
+.choice {
+  background: var(--paper); border: 2.5px solid transparent; border-radius: 16px;
+  padding: 0; height: 64px; font-size: 1.8rem; font-weight: 900; color: var(--ink);
+  box-shadow: 0 4px 0 rgba(0,0,0,.09), 0 2px 8px var(--shadow); cursor: pointer;
+}
+.choice:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.08); }
+.choice.used { opacity: .25; }
+.choice:disabled { cursor: default; }
+
+.next-btn, .again-btn {
+  margin-top: 8px; padding: 12px 40px; border: none; border-radius: 50px;
+  background: var(--wood); color: #fff; font-size: 1.1rem; font-weight: 900;
+  box-shadow: 0 4px 0 var(--wood-dk); cursor: pointer;
+}
+.next-btn:active, .again-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--wood-dk); }
+.next-btn[hidden] { display: inline-block; visibility: hidden; }
+.end { display: none; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 28px 16px; }
+.end.show { display: flex; }
+.end .big { font-size: 3.4rem; }
+.end h2 { font-size: 1.5rem; font-weight: 900; color: var(--ink); }
+.end p { font-size: 1.1rem; font-weight: 700; color: var(--ink-lt); }
+.end-btn {
+  display: inline-block; margin-top: 10px; padding: 12px 36px; border-radius: 50px;
+  border: 2px solid var(--wood); background: var(--paper); color: var(--wood-dk);
+  font-size: 1rem; font-weight: 900; text-decoration: none;
+}
+body::before { background-image: url('images/bg/nakama.jpg'); }
+</style>
+</head>
+<body data-asobi="game">
+
+<header>
+  <h1 class="app-title">💭 ことばなぞなぞ</h1>
+  <div class="q-count" id="qCount">もんだい <b id="qNum">1</b>/<span id="qTotal">5</span></div>
+</header>
+
+<div id="play">
+  <div class="q-card">
+    <div class="q-text">なぞなぞ</div>
+    <div class="letters" id="letters"></div>
+    <div class="slots" id="slots"></div>
+    <div class="tools"><button class="hint-btn" id="hintBtn" type="button">💡 ヒント</button><button class="hint-btn" id="delBtn" type="button">⌫ けす</button></div>
+  </div>
+  <div class="choices" id="choices"></div>
+  <div class="bubble" id="bubble"></div>
+</div>
+<div style="display:flex;justify-content:center"><button class="next-btn" id="nextBtn" type="button" hidden>つぎへ</button></div>
+
+<div class="end" id="end">
+  <div class="big">🎉</div>
+  <h2>おしまい！</h2>
+  <p id="endText"></p>
+  <button class="again-btn" type="button" id="againBtn">もっと あそぶ</button>
+  <a class="end-btn" href="index.html">おしまい</a>
+</div>
+
+<script>
+// ふつうの ことばあそびの なぞなぞ。こたえは ひらがなカードを ならべて つくる。
+// q：もんだい、ans：こたえ、hint：ヒント
+const QUIZ = [
+  { q: 'パンは パンでも たべられない パンは？', ans: 'ふらいぱん', emoji: '🍳', hint: 'おりょうりに つかう どうぐだよ' },
+  { q: 'あめの ひに ひらく と まるくなる ものは？', ans: 'かさ', emoji: '☂️', hint: 'あめに ぬれないように さすよ' },
+  { q: 'あしが 8ほん ある うみの いきものは？', ans: 'たこ', emoji: '🐙', hint: 'すみを はくよ' },
+  { q: 'あしが 10ぽん ある うみの いきものは？', ans: 'いか', emoji: '🦑', hint: '2もじの いきものだよ' },
+  { q: 'かけると よく みえる ものは？', ans: 'めがね', emoji: '👓', hint: 'かおに かけるよ' },
+  { q: 'りょうてに はめる、ふたつ いっしょの ふゆの もの', ans: 'てぶくろ', emoji: '🧤', hint: 'てが あったかく なるよ' },
+  { q: 'そらに うかぶ、しろくて ふわふわの もの', ans: 'くも', emoji: '☁️', hint: 'あめを ふらせることも あるよ' },
+  { q: 'ごはんを たべるとき、ふたつで つかう もの', ans: 'はし', emoji: '🥢', hint: '2もじだよ' },
+  { q: 'ほしの かたちを した、うみの いきものは？', ans: 'ひとで', emoji: '🌟', hint: '「ひと」から はじまるよ' },
+  { q: 'うしの おちちで できた しろい のみものは？', ans: 'ぎゅうにゅう', emoji: '🥛', hint: 'ごはんの ときに のむよ' },
+  { q: 'かくと どんどん みじかく なる ものは？', ans: 'えんぴつ', emoji: '✏️', hint: 'ノートに かくよ' },
+  { q: 'うしろから よんでも おなじ！ あかい やさいは？', ans: 'とまと', emoji: '🍅', hint: '「と」から はじまるよ' },
+  { q: 'うしろから よんでも おなじ！ まいにち とどく よみものは？', ans: 'しんぶんし', emoji: '🗞️', hint: '「し」から はじまって 「し」で おわるよ' },
+  { q: 'うしろから よんでも おなじ！ きを つつく とりは？', ans: 'きつつき', emoji: '🐦', hint: '「き」から はじまって 「き」で おわるよ' },
+  { q: 'よつあしで はしる、ひひーんと なく どうぶつは？', ans: 'うま', emoji: '🐴', hint: 'ひとが のることも あるよ' },
+  { q: 'たまごから うまれた ひよこが おおきく なると？', ans: 'にわとり', emoji: '🐔', hint: 'コケコッコーと なくよ' },
+  { q: 'おたまじゃくしが おおきく なると？', ans: 'かえる', emoji: '🐸', hint: 'ケロケロと なくよ' },
+  { q: 'たいように むかって おおきく さく、きいろい はなは？', ans: 'ひまわり', emoji: '🌻', hint: 'なつに さくよ' },
+  { q: 'バナナが だいすきな、きの うえで あそぶ どうぶつは？', ans: 'さる', emoji: '🐒', hint: '2もじだよ' },
+  { q: 'つかうと だんだん ちいさく なる、あわあわの もの', ans: 'せっけん', emoji: '🧼', hint: 'てを あらうよ' },
+  { q: 'いすは いすでも つめたくて あまい いすは？', ans: 'あいす', emoji: '🍦', hint: 'なつに たべると ひんやり する おやつ' },
+  { q: 'かんは かんでも たべられる 3もじの かんは？', ans: 'みかん', emoji: '🍊', hint: 'こたつで たべる オレンジいろの くだもの' },
+  { q: 'いかは いかでも はたけで できる おおきな いかは？', ans: 'すいか', emoji: '🍉', hint: 'みどりと くろの しましまで、なかは あかい' },
+  { q: 'かばは かばでも ものを いれて もちあるく かばは？', ans: 'かばん', emoji: '👜', hint: 'おでかけの とき てに もったり かたに かけたり する' },
+  { q: 'とらは とらでも にもつを はこぶ くるまの とらは？', ans: 'とらっく', emoji: '🚚', hint: 'うしろに おおきな にだいが ある くるま' },
+  { q: 'たいは たいでも くびに まく たいは？', ans: 'ねくたい', emoji: '👔', hint: 'おとうさんが しごとに いく とき シャツに つける' },
+  { q: 'うしは うしでも あたまに かぶる うしは？', ans: 'ぼうし', emoji: '🧢', hint: 'あつい ひに おひさまを よける' },
+  { q: 'さいは さいでも おかねを いれる さいは？', ans: 'さいふ', emoji: '👛', hint: 'おかいものの とき かばんから だす' },
+  { q: 'よるの そらに でて、まあるく なったり ほそく なったり する ものは？', ans: 'つき', emoji: '🌙', hint: 'うさぎが おもちを ついて いると いわれる' },
+];
+const ROUND = 5;
+let order = [], used = 0, idx = 0, score = 0, firstTry = true, q = null;
+
+const $ = id => document.getElementById(id);
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function start() {
+  if (used + ROUND > QUIZ.length) { order = shuffle(QUIZ); used = 0; }
+  idx = 0; score = 0;
+  $('end').classList.remove('show');
+  $('play').style.display = '';
+  $('qCount').style.display = '';
+  $('qTotal').textContent = ROUND;
+  show();
+}
+let tiles = [], filled = [], locked = false;
+// こたえの文字＋まぎらわしい文字で、いつも8まいの ひらがなカード
+function makeTiles() {
+  const own = Array.from(q.ans);
+  const pool = Array.from(new Set(QUIZ.filter(x => x.ans !== q.ans).flatMap(x => Array.from(x.ans)))).filter(c => !own.includes(c));
+  return shuffle(own.concat(shuffle(pool).slice(0, 8 - own.length)));
+}
+function show() {
+  q = order[used + idx];
+  firstTry = true; locked = false;
+  $('qNum').textContent = idx + 1;
+  const L = $('letters'); L.textContent = '';
+  L.textContent = q.q;
+  const b = $('bubble'); b.className = 'bubble'; b.textContent = '';
+  $('hintBtn').hidden = false;
+  $('nextBtn').hidden = true;
+  tiles = makeTiles(); filled = [];
+  render();
+}
+function render() {
+  $('delBtn').disabled = locked || filled.length === 0;
+  const S = $('slots'); S.textContent = ''; S.className = 'slots';
+  Array.from(q.ans).forEach((_, i) => {
+    const d = document.createElement('button');
+    d.type = 'button'; d.className = 'slot' + (filled[i] != null ? ' filled' : '');
+    d.textContent = filled[i] != null ? tiles[filled[i]] : '';
+    d.addEventListener('click', () => { if (!locked && filled[i] != null) { filled.splice(i, 1); render(); } });
+    S.appendChild(d);
+  });
+  const C = $('choices'); C.textContent = '';
+  tiles.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'choice' + (filled.includes(i) ? ' used' : '');
+    btn.textContent = c; btn.disabled = locked || filled.includes(i);
+    btn.addEventListener('click', () => pick(i));
+    C.appendChild(btn);
+  });
+}
+function pick(i) {
+  if (locked || filled.length >= q.ans.length) return;
+  Asobi.sfx('tap');
+  filled.push(i); render();
+  if (filled.length < q.ans.length) return;
+  const word = filled.map(k => tiles[k]).join('');
+  if (word === q.ans) correct(); else wrong();
+}
+function wrong() {
+  locked = true; firstTry = false;
+  Asobi.sfx('ng');
+  $('slots').classList.add('ng');
+  setTimeout(() => { filled = []; locked = false; render(); }, 700);
+}
+function correct() {
+  locked = true;
+  Asobi.sfx('ok');
+  if (firstTry) score++;
+  render(); $('slots').classList.add('ok');
+  $('hintBtn').hidden = true;
+  const b = $('bubble'); b.className = 'bubble show good'; b.textContent = '';
+  const em = document.createElement('span'); em.className = 'em'; em.textContent = q.emoji;
+  b.appendChild(em);
+  b.appendChild(document.createTextNode('せいかい！  こたえは「' + q.ans + '」'));
+  $('nextBtn').textContent = idx + 1 >= ROUND ? 'けっか' : 'つぎへ';
+  $('nextBtn').hidden = false;
+}
+$('delBtn').addEventListener('click', () => { if (locked || !filled.length) return; filled.pop(); Asobi.sfx('tap'); render(); });
+$('hintBtn').addEventListener('click', () => {
+  const b = $('bubble'); b.className = 'bubble show'; b.textContent = q.hint;
+  Asobi.sfx('tap');
+});
+$('nextBtn').addEventListener('click', () => {
+  if (idx + 1 >= ROUND) return finish();
+  idx++; show();
+});
+function finish() {
+  used += ROUND;
+  $('play').style.display = 'none';
+  $('nextBtn').hidden = true;
+  $('qCount').style.display = 'none';
+  $('endText').textContent = '1かいで わかったのは ' + score + 'もん！';
+  $('end').classList.add('show');
+  Asobi.sfx('clear');
+}
+$('againBtn').addEventListener('click', start);
+order = shuffle(QUIZ);
+start();
+</script>
+</body>
+</html>
