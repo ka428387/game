@@ -103,7 +103,11 @@ header { width: 100%; padding: 58px 16px 2px; text-align: center; }
   border: 2px solid var(--wood); background: var(--paper); color: var(--wood-dk);
   font-size: 1rem; font-weight: 900; text-decoration: none;
 }
-body::before { background-image: url('images/bg/nakama.jpg'); }
+body::before { background-image: url('images/bg/kotobanazo.jpg'); }
+
+.bubble.warn { white-space: pre-line; color: #a33; background: #FDF0F0; font-size: 1rem; }
+.pulse { animation: pulse .7s ease 3; }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 </style>
 </head>
 <body data-asobi="game">
@@ -228,10 +232,24 @@ function pick(i) {
   const word = filled.map(k => tiles[k]).join('');
   if (word === q.ans) correct(); else wrong();
 }
+let saved = null;
+// まちがえたとき：「ちがうみたい」を下の欄に出して、ヒントがあれば すすめる
+function flash(msg) {
+  const b = $('bubble');
+  if (!saved) saved = { cls: b.className, html: b.innerHTML };
+  b.className = 'bubble show warn'; b.textContent = msg;
+  setTimeout(() => {
+    if (b.classList.contains('warn') && saved) { b.className = saved.cls; b.innerHTML = saved.html; }
+    saved = null;
+  }, 2400);
+}
 function wrong() {
   locked = true; firstTry = false;
   Asobi.sfx('ng');
   $('slots').classList.add('ng');
+  const hinted = $('bubble').classList.contains('show');
+  if (hinted) flash('🤔 ちがうみたい…\nもういちど かんがえてみよう！');
+  else { flash('🤔 ちがうみたい…\n💡 ヒントを みてみよう！'); const h = $('hintBtn'); h.classList.remove('pulse'); void h.offsetWidth; h.classList.add('pulse'); }
   setTimeout(() => { filled = []; locked = false; render(); }, 700);
 }
 function correct() {

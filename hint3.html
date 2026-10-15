@@ -42,6 +42,11 @@ header { width: 100%; padding: 58px 16px 2px; text-align: center; }
 .hints { width: 100%; display: flex; flex-direction: column; gap: 8px; min-height: 160px; }
 .hrow { display: flex; gap: 8px; align-items: flex-start; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 50px; visibility: hidden; }
 .hrow.on { visibility: visible; }
+.next-hint {
+  min-height: 50px; border: none; border-radius: 12px; background: var(--wood); color: #fff;
+  font-size: 1.05rem; font-weight: 900; cursor: pointer; box-shadow: 0 4px 0 var(--wood-dk);
+}
+.next-hint:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--wood-dk); }
 .hrow.new { animation: fadeIn .25s ease; }
 .hrow b { flex: none; font-size: .8rem; color: #fff; background: var(--wood); border-radius: 10px; padding: 2px 8px; margin-top: 2px; }
 .hrow span { font-size: .95rem; font-weight: 700; color: var(--ink); line-height: 1.5; }
@@ -109,7 +114,11 @@ header { width: 100%; padding: 58px 16px 2px; text-align: center; }
   border: 2px solid var(--wood); background: var(--paper); color: var(--wood-dk);
   font-size: 1rem; font-weight: 900; text-decoration: none;
 }
-body::before { background-image: url('images/bg/nakama.jpg'); }
+body::before { background-image: url('images/bg/hint3.jpg'); }
+
+.bubble.warn { white-space: pre-line; color: #a33; background: #FDF0F0; font-size: 1rem; }
+.pulse { animation: pulse .7s ease 3; }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 </style>
 </head>
 <body data-asobi="game">
@@ -124,7 +133,7 @@ body::before { background-image: url('images/bg/nakama.jpg'); }
     
     <div class="hints" id="hints"></div>
     <div class="slots" id="slots"></div>
-    <div class="tools"><button class="hint-btn" id="hintBtn" type="button">💡 つぎの ヒント</button><button class="hint-btn" id="delBtn" type="button">⌫ けす</button></div>
+    <div class="tools"><button class="hint-btn" id="delBtn" type="button">⌫ けす</button></div>
   </div>
   <div class="choices" id="choices"></div>
   <div class="bubble" id="bubble"></div>
@@ -140,7 +149,7 @@ body::before { background-image: url('images/bg/nakama.jpg'); }
 </div>
 
 <script>
-// 3つの ヒントを 1つずつ ふやして あてる クイズ。ヒントが すくないほど こうとくてん（3・2・1てん）。こたえは ひらがなカードを ならべて つくる。
+// 3つの ヒントを 1つずつ ふやして あてる クイズ（てんすうは なし）。こたえは ひらがなカードを ならべて つくる。
 // ans：こたえ、hints：ヒント3つ（1つめは ひろく、3つめで ほぼ きまる）
 const QUIZ = [
   { ans: 'ぞう', emoji: '🐘', hints: ['どうぶつえんで みられるよ', 'からだが とても おおきくて はいいろだよ', 'はなが ながくて はなで みずを すえるよ'] },
@@ -185,12 +194,19 @@ function makeTiles() {
 function renderHints() {
   const H = $('hints'); H.textContent = '';
   q.hints.forEach((t, i) => {
+    if (i === shown && !locked) {
+      // 次のヒントは、そのヒントの場所に大きなボタンで出す
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'next-hint';
+      btn.textContent = '💡 ヒント' + (i + 1) + 'を みる';
+      btn.addEventListener('click', () => { if (locked || shown >= 3) return; shown++; Asobi.sfx('tap'); renderHints(); });
+      H.appendChild(btn); return;
+    }
     const r = document.createElement('div'); r.className = 'hrow' + (i < shown ? ' on' : '') + (i === shown - 1 && shown > 1 ? ' new' : '');
     const b = document.createElement('b'); b.textContent = 'ヒント' + (i + 1);
     const sp = document.createElement('span'); sp.textContent = t;
     r.appendChild(b); r.appendChild(sp); H.appendChild(r);
   });
-  $('hintBtn').disabled = shown >= 3;
 }
 function show() {
   q = order[used + idx];
@@ -198,7 +214,6 @@ function show() {
   $('qNum').textContent = idx + 1;
   shown = 1; renderHints();
   const b = $('bubble'); b.className = 'bubble'; b.textContent = '';
-  $('hintBtn').hidden = false; $('hintBtn').disabled = false;
   $('nextBtn').hidden = true;
   tiles = makeTiles(); filled = [];
   render();
@@ -230,30 +245,40 @@ function pick(i) {
   const word = filled.map(k => tiles[k]).join('');
   if (word === q.ans) correct(); else wrong();
 }
+let saved = null;
+// まちがえたとき：「ちがうみたい」を下の欄に出して、ヒントがあれば すすめる
+function flash(msg) {
+  const b = $('bubble');
+  if (!saved) saved = { cls: b.className, html: b.innerHTML };
+  b.className = 'bubble show warn'; b.textContent = msg;
+  setTimeout(() => {
+    if (b.classList.contains('warn') && saved) { b.className = saved.cls; b.innerHTML = saved.html; }
+    saved = null;
+  }, 2400);
+}
 function wrong() {
   locked = true;
   Asobi.sfx('ng');
   $('slots').classList.add('ng');
+  if (shown < 3) {
+    flash('🤔 ちがうみたい…\n💡 つぎの ヒントを みてみよう！');
+    const n = document.querySelector('.next-hint'); if (n) { n.classList.remove('pulse'); void n.offsetWidth; n.classList.add('pulse'); }
+  } else flash('🤔 ちがうみたい…\nもういちど かんがえてみよう！');
   setTimeout(() => { filled = []; locked = false; render(); }, 700);
 }
 function correct() {
   locked = true;
   Asobi.sfx('ok');
-  const pts = 4 - shown; score += pts;
+  score++; renderHints();
   render(); $('slots').classList.add('ok');
-  $('hintBtn').hidden = true;
   const b = $('bubble'); b.className = 'bubble show good'; b.textContent = '';
   const em = document.createElement('span'); em.className = 'em'; em.textContent = q.emoji;
   b.appendChild(em);
-  b.appendChild(document.createTextNode('せいかい！  ' + pts + 'てん  こたえは「' + q.ans + '」'));
+  b.appendChild(document.createTextNode('せいかい！  こたえは「' + q.ans + '」'));
   $('nextBtn').textContent = idx + 1 >= ROUND ? 'けっか' : 'つぎへ';
   $('nextBtn').hidden = false;
 }
 $('delBtn').addEventListener('click', () => { if (locked || !filled.length) return; filled.pop(); Asobi.sfx('tap'); render(); });
-$('hintBtn').addEventListener('click', () => {
-  if (locked || shown >= 3) return;
-  shown++; Asobi.sfx('tap'); renderHints();
-});
 $('nextBtn').addEventListener('click', () => {
   if (idx + 1 >= ROUND) return finish();
   idx++; show();
@@ -263,7 +288,7 @@ function finish() {
   $('play').style.display = 'none';
   $('nextBtn').hidden = true;
   $('qCount').style.display = 'none';
-  $('endText').textContent = 'ぜんぶで ' + score + 'てん！（まんてん ' + ROUND * 3 + 'てん）';
+  $('endText').textContent = 'ぜんぶ できたね！';
   $('end').classList.add('show');
   Asobi.sfx('clear');
 }
